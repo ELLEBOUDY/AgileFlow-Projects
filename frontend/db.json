@@ -1,0 +1,93 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Mahmoud",
+      "role": "Admin",
+      "email": "admin@agileflow.com"
+    },
+    {
+      "id": "2",
+      "name": "Sarah",
+      "role": "Developer",
+      "email": "sarah@agileflow.com"
+    },
+    {
+      "name": "Mahmoud Elleboudy",
+      "email": "modirlleboudy902@gmail.com",
+      "role": "Designer",
+      "phone": "+201126110951",
+      "id": "bg1QnuH_9ic"
+    }
+  ],
+  "projects": [
+    {
+      "id": "1",
+      "title": "AgileFlow UI Revamp",
+      "status": "in_progress",
+      "progress": 65,
+      "managerId": "1"
+    },
+    {
+      "id": "2",
+      "title": "Backend API Migration",
+      "status": "planning",
+      "progress": 15,
+      "managerId": "2"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "projectId": "1",
+      "title": "Setup Vite & Tailwind v4",
+      "status": "done",
+      "assigneeId": "1"
+    },
+    {
+      "id": "2",
+      "projectId": "1",
+      "title": "Create Layout Components",
+      "status": "done",
+      "assigneeId": "1"
+    },
+    {
+      "id": "3",
+      "projectId": "1",
+      "title": "Implement Dashboard Charts",
+      "status": "todo",
+      "assigneeId": "2"
+    },
+    {
+      "id": "5",
+      "projectId": "1",
+      "title": "Implement Drag & Drop for Tasks",
+      "status": "todo",
+      "assigneeId": "2"
+    },
+    {
+      "id": "6",
+      "projectId": "1",
+      "title": "Configure Auth Context",
+      "status": "todo",
+      "assigneeId": "1"
+    },
+    {
+      "title": "ui",
+      "status": "in_progress",
+      "description": "Added quickly from the board.",
+      "assigneeId": 3,
+      "projectId": "1",
+      "id": "SpUR7uP793U"
+    },
+    {
+      "title": "project enhance",
+      "description": "update",
+      "status": "review",
+      "assigneeId": "2",
+      "projectId": "1",
+      "id": "4MhWbrHROxQ"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
