@@ -1,6 +1,6 @@
 import { createBrowserRouter, redirect } from "react-router-dom";
-import { MainLayout } from "./components/layout/MainLayout";
-import { AuthLayout } from "./components/layout/AuthLayout";
+import  MainLayout  from "./components/layout/MainLayout";
+import  AuthLayout  from "./components/layout/AuthLayout";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
 import { MyTasksPage } from "./pages/MyTasksPage";
