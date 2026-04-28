@@ -109,7 +109,7 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border bg-card text-card-foreground shadow-sm lg:col-span-3 p-4">
+        <div className="rounded-2xl border bg-card text-card-foreground shadow-xl lg:col-span-3 p-4">
           <h3 className="font-semibold leading-none tracking-tight mb-4">Project Status</h3>
           <div className="h-[300px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
