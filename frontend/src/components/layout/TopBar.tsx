@@ -6,8 +6,9 @@ import { Button } from "../ui/button";
 
 export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(false); 
   const navigate = useNavigate();
+  
 
   useEffect(() => {
     setMounted(true);
