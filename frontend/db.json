@@ -1,28 +1,188 @@
 {
   "tasks": [
-    { "id": 1, "title": "Design new landing page mockup", "description": "Create high-fidelity mockups for the new marketing landing page", "status": "done", "assigneeId": 1, "projectId": "1" },
-    { "id": 2, "title": "Implement user authentication flow", "description": "Build login, register, and password reset functionality", "status": "in_progress", "assigneeId": 2, "projectId": "1" },
-    { "id": 3, "title": "Set up CI/CD pipeline", "description": "Configure GitHub Actions for automated testing and deployment", "status": "todo", "assigneeId": 3, "projectId": "2" },
-    { "id": 4, "title": "Write API documentation", "description": "Document all REST API endpoints with examples", "status": "review", "assigneeId": 1, "projectId": "1" },
-    { "id": 5, "title": "Optimize database queries", "description": "Improve slow queries identified in performance audit", "status": "in_progress", "assigneeId": 4, "projectId": "2" },
-    { "id": 6, "title": "Create onboarding tutorial", "description": "Build interactive walkthrough for new users", "status": "todo", "assigneeId": 2, "projectId": "3" },
-    { "id": 7, "title": "Fix responsive layout issues", "description": "Address mobile breakpoint problems on dashboard", "status": "done", "assigneeId": 3, "projectId": "1" },
-    { "id": 8, "title": "Add dark mode support", "description": "Implement theme switching with system preference detection", "status": "done", "assigneeId": 1, "projectId": "1" },
-    { "id": 9, "title": "Integrate payment gateway", "description": "Set up Stripe for subscription billing", "status": "todo", "assigneeId": 4, "projectId": "3" },
-    { "id": 10, "title": "Refactor state management", "description": "Migrate from context API to Redux Toolkit", "status": "in_progress", "assigneeId": 2, "projectId": "2" }
+    {
+      "id": "1",
+      "title": "Design new landing page mockup",
+      "description": "Create high-fidelity mockups for the new marketing landing page",
+      "status": "done",
+      "assigneeId": 1,
+      "projectId": "1"
+    },
+    {
+      "id": "2",
+      "title": "Implement user authentication flow",
+      "description": "Build login, register, and password reset functionality",
+      "status": "done",
+      "assigneeId": 2,
+      "projectId": "1"
+    },
+    {
+      "id": "3",
+      "title": "Set up CI/CD pipeline",
+      "description": "Configure GitHub Actions for automated testing and deployment",
+      "status": "in_progress",
+      "assigneeId": 3,
+      "projectId": "2"
+    },
+    {
+      "id": "4",
+      "title": "Write API documentation",
+      "description": "Document all REST API endpoints with examples",
+      "status": "todo",
+      "assigneeId": 1,
+      "projectId": "1"
+    },
+    {
+      "id": "5",
+      "title": "Optimize database queries",
+      "description": "Improve slow queries identified in performance audit",
+      "status": "done",
+      "assigneeId": 4,
+      "projectId": "2"
+    },
+    {
+      "id": "6",
+      "title": "Create onboarding tutorial",
+      "description": "Build interactive walkthrough for new users",
+      "status": "todo",
+      "assigneeId": 2,
+      "projectId": "3"
+    },
+    {
+      "id": "7",
+      "title": "Fix responsive layout issues",
+      "description": "Address mobile breakpoint problems on dashboard",
+      "status": "todo",
+      "assigneeId": 3,
+      "projectId": "1"
+    },
+    {
+      "title": "Integrate payment gateway",
+      "description": "Set up Stripe for subscription billing",
+      "status": "review",
+      "assigneeId": "4",
+      "projectId": "1",
+      "id": "9"
+    },
+    {
+      "title": "asas",
+      "description": "asdasdasd",
+      "status": "review",
+      "assigneeId": "3",
+      "projectId": "1",
+      "id": "nsp7regcNLg"
+    },
+    {
+      "title": "vvv",
+      "description": "vvvvvvvvvvvvvvvvvv",
+      "status": "done",
+      "assigneeId": "3",
+      "projectId": "1",
+      "id": "oTFfnCCARO0"
+    },
+    {
+      "title": "asd",
+      "description": "sadasdasdasd",
+      "status": "done",
+      "assigneeId": "1",
+      "projectId": "1",
+      "id": "dq8UONJ1pbg"
+    }
   ],
   "projects": [
-    { "id": 1, "title": "AgileFlow UI Revamp", "description": "Complete redesign of the AgileFlow user interface with modern components and dark mode support.", "status": "in_progress", "progress": 72 },
-    { "id": 2, "title": "Backend API v2", "description": "Building the next generation REST API with improved performance and new features.", "status": "in_progress", "progress": 45 },
-    { "id": 3, "title": "Mobile App Launch", "description": "Cross-platform mobile application for iOS and Android using React Native.", "status": "planning", "progress": 15 },
-    { "id": 4, "title": "Analytics Dashboard", "description": "Real-time analytics and reporting dashboard for project insights.", "status": "in_progress", "progress": 60 },
-    { "id": 5, "title": "Security Audit Q3", "description": "Comprehensive security review and vulnerability assessment.", "status": "completed", "progress": 100 }
+    {
+      "id": "1",
+      "title": "AgileFlow UI Revamp",
+      "description": "Complete redesign of the AgileFlow user interface with modern components and dark mode support.",
+      "status": "in_progress",
+      "progress": 72
+    },
+    {
+      "id": "2",
+      "title": "Backend API v2",
+      "description": "Building the next generation REST API with improved performance and new features.",
+      "status": "in_progress",
+      "progress": 45
+    },
+    {
+      "id": "3",
+      "title": "Mobile App Launch",
+      "description": "Cross-platform mobile application for iOS and Android using React Native.",
+      "status": "planning",
+      "progress": 15
+    },
+    {
+      "id": "4",
+      "title": "Analytics Dashboard",
+      "description": "Real-time analytics and reporting dashboard for project insights.",
+      "status": "in_progress",
+      "progress": 60
+    },
+    {
+      "id": "5",
+      "title": "Security Audit Q3",
+      "description": "Comprehensive security review and vulnerability assessment.",
+      "status": "completed",
+      "progress": 100
+    }
   ],
   "users": [
-    { "id": 1, "name": "Sarah Jenkins", "email": "sarah.jenkins@agileflow.com", "role": "Admin", "phone": "+1 (555) 123-4567" },
-    { "id": 2, "name": "Mike Thompson", "email": "mike.thompson@agileflow.com", "role": "Developer", "phone": "+1 (555) 234-5678" },
-    { "id": 3, "name": "David Wright", "email": "david.wright@agileflow.com", "role": "Developer", "phone": "+1 (555) 345-6789" },
-    { "id": 4, "name": "Emily Chen", "email": "emily.chen@agileflow.com", "role": "Designer", "phone": "+1 (555) 456-7890" },
-    { "id": 5, "name": "Alex Rodriguez", "email": "alex.rodriguez@agileflow.com", "role": "Manager", "phone": "+1 (555) 567-8901" }
-  ]
+    {
+      "id": "1",
+      "name": "Sarah Jenkins",
+      "email": "sarah.jenkins@agileflow.com",
+      "role": "Admin",
+      "phone": "+1 (555) 123-4567"
+    },
+    {
+      "id": "2",
+      "name": "Mike Thompson",
+      "email": "mike.thompson@agileflow.com",
+      "role": "Developer",
+      "phone": "+1 (555) 234-5678"
+    },
+    {
+      "id": "3",
+      "name": "David Wright",
+      "email": "david.wright@agileflow.com",
+      "role": "Developer",
+      "phone": "+1 (555) 345-6789"
+    },
+    {
+      "id": "4",
+      "name": "Emily Chen",
+      "email": "emily.chen@agileflow.com",
+      "role": "Designer",
+      "phone": "+1 (555) 456-7890"
+    },
+    {
+      "id": "5",
+      "name": "Alex Rodriguez",
+      "email": "alex.rodriguez@agileflow.com",
+      "role": "Manager",
+      "phone": "+1 (555) 567-8901"
+    },
+    {
+      "name": "s",
+      "email": "s@s",
+      "role": "Developer",
+      "phone": "ss",
+      "id": "ApQIyefK4EM"
+    },
+    {
+      "name": "asas",
+      "email": "asas@s.com",
+      "role": "Admin",
+      "phone": "as",
+      "id": "KZ5Q1-qzNJ4"
+    },
+    {
+      "name": "sd",
+      "email": "sd@sd.com",
+      "role": "Developer",
+      "phone": "sdf",
+      "id": "6hLwotJe-Rg"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
 }

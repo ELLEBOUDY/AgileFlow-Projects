@@ -1,11 +1,15 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, MoreHorizontal, MessageSquare, Paperclip, X, Trash2, Copy, Edit3, CheckSquare, Square } from "lucide-react";
-import { DndContext, useDraggable, useDroppable, DragOverlay, closestCorners } from "@dnd-kit/core";
 import type { DragEndEvent } from "@dnd-kit/core";
-import { useState } from "react";
-import api from "../services/api";
-import { Button } from "../components/ui/button";
+import { DndContext, DragOverlay, closestCorners, useDraggable, useDroppable } from "@dnd-kit/core";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CheckSquare, Edit3, MessageSquare, MoreHorizontal, Paperclip, Plus, Square, Trash2, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import api from "../services/api";
+import { taskSchema, type TaskFormType } from "../validation";
+import type { ITask } from "../interfaces";
 
 const COLUMNS = [
   { id: 'todo', title: 'To Do', color: 'border-l-4 border-l-slate-400' },
@@ -209,8 +213,24 @@ export function TaskBoardPage() {
   const [activeTask, setActiveTask] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [editingTask, setEditingTask] = useState<any | null>(null);
-  const [formData, setFormData] = useState({ title: "", description: "", status: "todo", assigneeId: "1" });
+  const [editingTask, setEditingTask] = useState<ITask | null>(null);
+
+  // React Hook Form setup with Zod validation
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setValue,
+  } = useForm<TaskFormType>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      status: "todo",
+      assigneeId: "1",
+    },
+  });
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ['tasks'],
@@ -252,12 +272,18 @@ export function TaskBoardPage() {
   });
 
   const createTask = useMutation({
-    mutationFn: async (newTask: any) => {
+    mutationFn: async (newTask: TaskFormType) => {
       if (editingTask) {
-        const { data } = await api.put(`/tasks/${editingTask.id}`, newTask);
+        const { data } = await api.put(`/tasks/${editingTask.id}`, {
+          ...newTask,
+          projectId: "1",
+        });
         return data;
       } else {
-        const { data } = await api.post('/tasks', newTask);
+        const { data } = await api.post('/tasks', {
+          ...newTask,
+          projectId: "1",
+        });
         return data;
       }
     },
@@ -265,38 +291,49 @@ export function TaskBoardPage() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setIsModalOpen(false);
       setEditingTask(null);
-      setFormData({ title: "", description: "", status: "todo", assigneeId: "1" });
+      reset();
     }
   });
 
   const handleInlineAdd = (status: string, title: string) => {
     createTask.mutate({
       title,
-      status,
+      status: status as TaskFormType['status'],
       description: "Added quickly from the board.",
-      assigneeId: Math.floor(Math.random() * 5) + 1, // Random assignee for demo
-      projectId: "1"
+      assigneeId: (Math.floor(Math.random() * 5) + 1).toString(),
     });
   };
 
-  const handleGlobalSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createTask.mutate({
-      ...formData,
-      projectId: "1"
-    });
+  const onSubmit = (data: TaskFormType) => {
+    createTask.mutate(data);
   };
 
-  const handleEditTask = (task: any) => {
+  const handleEditTask = (task: ITask) => {
     setEditingTask(task);
-    setFormData({
-      title: task.title,
-      description: task.description || "",
-      status: task.status,
-      assigneeId: task.assigneeId.toString()
-    });
+    setValue("title", task.title);
+    setValue("description", task.description);
+    setValue("status", task.status);
+    setValue("assigneeId", task.assigneeId.toString());
     setIsModalOpen(true);
   };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingTask(null);
+    reset();
+  };
+
+  // Reset form when modal opens for creating a new task
+  useEffect(() => {
+    if (isModalOpen && !editingTask) {
+      reset({
+        title: "",
+        description: "",
+        status: "todo",
+        assigneeId: "1",
+      });
+    }
+  }, [isModalOpen, editingTask, reset]);
 
   const handleDragStart = (event: any) => {
     const { active } = event;
@@ -350,7 +387,7 @@ export function TaskBoardPage() {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 h-full">
               {COLUMNS.map((column) => {
                 const columnTasks = tasks.filter((t: any) => t.status === column.id);
                 return (
@@ -389,57 +426,89 @@ export function TaskBoardPage() {
 
       <Modal 
         isOpen={isModalOpen} 
-        onClose={() => { setIsModalOpen(false); setEditingTask(null); }} 
+        onClose={handleCloseModal} 
         title={editingTask ? "Edit Task" : "Create New Task"}
       >
-        <form onSubmit={handleGlobalSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Task Title</label>
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Task Title
+            </label>
             <input 
-              required
               type="text" 
-              className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={`flex h-10 w-full rounded-md border ${
+                errors.title ? 'border-destructive' : 'border-input'
+              } bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
               placeholder="e.g., Update user profile schema"
-              value={formData.title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              {...register("title")}
             />
+            {errors.title && (
+              <p className="text-xs text-destructive mt-1">{errors.title.message}</p>
+            )}
           </div>
+
           <div className="space-y-2">
             <label className="text-sm font-medium leading-none">Description</label>
             <textarea 
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={`flex min-h-[80px] w-full rounded-md border ${
+                errors.description ? 'border-destructive' : 'border-input'
+              } bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
               placeholder="Provide a detailed description..."
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              {...register("description")}
             />
+            {errors.description && (
+              <p className="text-xs text-destructive mt-1">{errors.description.message}</p>
+            )}
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none">Status</label>
               <select 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
+                className={`flex h-10 w-full rounded-md border ${
+                  errors.status ? 'border-destructive' : 'border-input'
+                } bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+                {...register("status")}
               >
-                {COLUMNS.map(col => <option key={col.id} value={col.id}>{col.title}</option>)}
+                {COLUMNS.map(col => (
+                  <option key={col.id} value={col.id}>{col.title}</option>
+                ))}
               </select>
+              {errors.status && (
+                <p className="text-xs text-destructive mt-1">{errors.status.message}</p>
+              )}
             </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none">Assign To</label>
               <select 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={formData.assigneeId}
-                onChange={(e) => setFormData({...formData, assigneeId: e.target.value})}
+                className={`flex h-10 w-full rounded-md border ${
+                  errors.assigneeId ? 'border-destructive' : 'border-input'
+                } bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+                {...register("assigneeId")}
               >
                 <option value="1">Sarah Jenkins</option>
                 <option value="2">Mike Thompson</option>
                 <option value="3">David Wright</option>
               </select>
+              {errors.assigneeId && (
+                <p className="text-xs text-destructive mt-1">{errors.assigneeId.message}</p>
+              )}
             </div>
           </div>
+
           <div className="flex justify-end gap-2 pt-4 border-t mt-6">
-            <Button type="button" variant="ghost" onClick={() => { setIsModalOpen(false); setEditingTask(null); }}>Cancel</Button>
-            <Button type="submit">{editingTask ? "Save Changes" : "Create Task"}</Button>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              onClick={handleCloseModal}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : editingTask ? "Save Changes" : "Create Task"}
+            </Button>
           </div>
         </form>
       </Modal>

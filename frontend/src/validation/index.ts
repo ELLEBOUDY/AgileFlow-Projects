@@ -1,0 +1,70 @@
+import { z } from "zod";
+
+export const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
+});
+
+export type LoginFormType = z.infer<typeof loginSchema>;
+
+export const registerSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Full name is required")
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
+});
+
+export type RegisterFormType = z.infer<typeof registerSchema>;
+
+export const memberSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Full name is required")
+    .min(2, "Name must be at least 2 characters"),
+
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+
+  role: z.enum(["Admin", "Developer", "Designer", "Manager"]),
+
+  phone: z
+    .string()
+    .min(1, "Phone is required")
+    .regex(/^01[0125]\d{8}$/, "Phone must be a valid Egyptian number"),
+});
+
+export type MemberFormType = z.infer<typeof memberSchema>;
+
+export const taskSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Task title is required")
+    .min(3, "Title must be at least 3 characters")
+    .max(100, "Title must not exceed 100 characters"),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .min(10, "Description must be at least 10 characters"),
+  status: z.enum(["todo", "in_progress", "review", "done"]),
+  assigneeId: z
+    .string()
+    .min(1, "Please assign this task to someone"),
+});
+
+export type TaskFormType = z.infer<typeof taskSchema>;
