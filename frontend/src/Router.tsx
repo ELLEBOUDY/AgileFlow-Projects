@@ -9,6 +9,9 @@ import { TeamPage } from "./pages/TeamPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
+import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
+import { VerifyCodePage } from "./pages/auth/VerifyCodePage";
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
 import { FilesPage } from "./pages/FilesPage";
 import { ReportsPage } from "./pages/ReportsPage";
 
@@ -31,6 +34,18 @@ export const router = createBrowserRouter([
       {
         path: "register",
         element: <RegisterPage />,
+      },
+      {
+        path: "forgot-password",
+        element: <ForgotPasswordPage />,
+      },
+      {
+        path: "verify-code",
+        element: <VerifyCodePage />,
+      },
+      {
+        path: "reset-password",
+        element: <ResetPasswordPage />,
       },
     ],
   },

@@ -68,3 +68,33 @@ export const taskSchema = z.object({
 });
 
 export type TaskFormType = z.infer<typeof taskSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+});
+export type ForgotPasswordFormType = z.infer<typeof forgotPasswordSchema>;
+
+export const verifyCodeSchema = z.object({
+  code: z
+    .string()
+    .min(1, "Verification code is required")
+    .length(6, "Code must be exactly 6 characters"),
+});
+export type VerifyCodeFormType = z.infer<typeof verifyCodeSchema>;
+
+export const resetPasswordSchema = z.object({
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
+  confirmPassword: z
+    .string()
+    .min(1, "Confirm Password is required"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+export type ResetPasswordFormType = z.infer<typeof resetPasswordSchema>;

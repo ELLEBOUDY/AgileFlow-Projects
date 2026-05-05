@@ -3,32 +3,32 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { loginSchema, type LoginFormType } from "@/validation/index"
+import { forgotPasswordSchema, type ForgotPasswordFormType } from "@/validation/index";
 
-export function LoginPage() {
+export function ForgotPasswordPage() {
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormType>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<ForgotPasswordFormType>({
+    resolver: zodResolver(forgotPasswordSchema),
   });
 
-  const onSubmit = async (_data: LoginFormType) => {
-    // Simulate login
-    console.log("Logging in with:", _data);
-    localStorage.setItem("isAuthenticated", "true");
-    navigate("/");
+  const onSubmit = async (_data: ForgotPasswordFormType) => {
+    // Simulate sending email
+    console.log("Sending verification code to:", _data.email);
+    // Redirect to verify code page, you could pass the email via state
+    navigate("/verify-code", { state: { email: _data.email } });
   };
 
   return (
     <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col space-y-2 text-center mb-6">
-        <h2 className="text-2xl font-semibold tracking-tight">Welcome back</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Forgot Password</h2>
         <p className="text-sm text-muted-foreground">
-          Enter your credentials to access your account
+          Enter your email address to receive a verification code
         </p>
       </div>
 
@@ -48,43 +48,17 @@ export function LoginPage() {
           )}
         </div>
 
-        <div className="space-y-2 text-left">
-          <div className="flex items-center justify-between">
-            <label
-              className="text-sm font-medium leading-none"
-              htmlFor="password"
-            >
-              Password
-            </label>
-            <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-              Forgot password?
-            </Link>
-          </div>
-          <Input
-            id="password"
-            type="password"
-            {...register("password")}
-            aria-invalid={!!errors.password}
-          />
-          {errors.password && (
-            <p className="text-sm text-destructive">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
-
         <Button type="submit" className="w-full mt-6" disabled={isSubmitting}>
-          {isSubmitting ? "Signing in…" : "Sign In"}
+          {isSubmitting ? "Sending..." : "Send Verification Code"}
         </Button>
       </form>
 
       <div className="mt-6 text-center text-sm">
-        <span className="text-muted-foreground">Don't have an account? </span>
         <Link
-          to="/register"
+          to="/login"
           className="text-primary hover:underline font-medium"
         >
-          Register here
+          Back to login
         </Link>
       </div>
     </div>
