@@ -184,5 +184,47 @@
       "id": "6hLwotJe-Rg"
     }
   ],
+  "files": [
+    {
+      "id": "2",
+      "name": "UI_Design_Assets.pdf",
+      "type": "zip",
+      "size": "145 MB",
+      "date": "Oct 10, 2026",
+      "uploader": "Mike T."
+    },
+    {
+      "id": "3",
+      "name": "Project_Requirements.docx",
+      "type": "doc",
+      "size": "1.1 MB",
+      "date": "Oct 08, 2026",
+      "uploader": "Admin"
+    },
+    {
+      "id": "4",
+      "name": "Architecture_Diagram.png",
+      "type": "img",
+      "size": "4.2 MB",
+      "date": "Oct 05, 2026",
+      "uploader": "David W."
+    },
+    {
+      "id": "5",
+      "name": "Sprint_Planning_Notes.txt",
+      "type": "txt",
+      "size": "12 KB",
+      "date": "Oct 01, 2026",
+      "uploader": "Admin"
+    },
+    {
+      "name": "final design.png",
+      "type": "img",
+      "size": "2.8 MB",
+      "date": "May 05, 2026",
+      "uploader": "Current User",
+      "id": "tppaHZvSNE8"
+    }
+  ],
   "$schema": "./node_modules/json-server/schema.json"
 }
