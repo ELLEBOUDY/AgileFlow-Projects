@@ -9,7 +9,7 @@ import type { IUser } from "@/interfaces";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { memberSchema, type MemberFormType } from "../validation";
-
+import { useMemo } from "react";
 function Modal({
   isOpen,
   onClose,
@@ -69,6 +69,9 @@ export function TeamPage() {
     },
   });
 
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+
   const createMember = useMutation({
     mutationFn: async (newUser: IUser) => {
       const { data } = await api.post("/users", newUser);
@@ -99,6 +102,26 @@ export function TeamPage() {
     createMember.mutate(data);
   };
 
+  const filteredUsers = useMemo(() => {
+    return users.filter((user: IUser) => {
+      // role filtering
+      if (roleFilter !== "all" && user.role !== roleFilter) {
+        return false;
+      }
+
+      // search filtering
+      if (search.trim() !== "") {
+        const text = search.toLowerCase();
+        return (
+          user.name?.toLowerCase().includes(text) ||
+          user.email?.toLowerCase().includes(text)
+        );
+      }
+
+      return true;
+    });
+  }, [users, search, roleFilter]);
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -124,30 +147,39 @@ export function TeamPage() {
             type="search"
             placeholder="Search members by name or email..."
             className="pl-8"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <div className="flex gap-2 flex-wrap">
           <Badge
-            variant="secondary"
-            className="cursor-pointer hover:bg-secondary/80"
+            variant={roleFilter === "all" ? "secondary" : "outline"}
+            onClick={() => setRoleFilter("all")}
+            className="cursor-pointer"
           >
             All Roles
           </Badge>
+
           <Badge
-            variant="outline"
-            className="cursor-pointer hover:bg-secondary"
+            variant={roleFilter === "Admin" ? "secondary" : "outline"}
+            onClick={() => setRoleFilter("Admin")}
+            className="cursor-pointer"
           >
             Admin
           </Badge>
+
           <Badge
-            variant="outline"
-            className="cursor-pointer hover:bg-secondary"
+            variant={roleFilter === "Manager" ? "secondary" : "outline"}
+            onClick={() => setRoleFilter("Manager")}
+            className="cursor-pointer"
           >
             Manager
           </Badge>
+
           <Badge
-            variant="outline"
-            className="cursor-pointer hover:bg-secondary"
+            variant={roleFilter === "Developer" ? "secondary" : "outline"}
+            onClick={() => setRoleFilter("Developer")}
+            className="cursor-pointer"
           >
             Developer
           </Badge>
@@ -160,7 +192,7 @@ export function TeamPage() {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {users.map((user: IUser) => (
+          {filteredUsers.map((user: IUser) => (
             <div
               key={user.id}
               className="rounded-xl border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow overflow-hidden group"

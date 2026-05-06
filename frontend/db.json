@@ -4,7 +4,7 @@
       "id": "1",
       "title": "Design new landing page mockup",
       "description": "Create high-fidelity mockups for the new marketing landing page",
-      "status": "done",
+      "status": "in_progress",
       "assigneeId": 1,
       "projectId": "1"
     },
@@ -12,7 +12,7 @@
       "id": "2",
       "title": "Implement user authentication flow",
       "description": "Build login, register, and password reset functionality",
-      "status": "done",
+      "status": "review",
       "assigneeId": 2,
       "projectId": "1"
     },
@@ -20,7 +20,7 @@
       "id": "3",
       "title": "Set up CI/CD pipeline",
       "description": "Configure GitHub Actions for automated testing and deployment",
-      "status": "in_progress",
+      "status": "review",
       "assigneeId": 3,
       "projectId": "2"
     },
@@ -52,14 +52,14 @@
       "id": "7",
       "title": "Fix responsive layout issues",
       "description": "Address mobile breakpoint problems on dashboard",
-      "status": "todo",
+      "status": "done",
       "assigneeId": 3,
       "projectId": "1"
     },
     {
       "title": "Integrate payment gateway",
       "description": "Set up Stripe for subscription billing",
-      "status": "review",
+      "status": "in_progress",
       "assigneeId": "4",
       "projectId": "1",
       "id": "9"
@@ -67,7 +67,7 @@
     {
       "title": "asas",
       "description": "asdasdasd",
-      "status": "review",
+      "status": "done",
       "assigneeId": "3",
       "projectId": "1",
       "id": "nsp7regcNLg"
