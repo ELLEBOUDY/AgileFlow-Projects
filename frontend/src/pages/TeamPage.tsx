@@ -1,6 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Mail, Phone, MoreVertical, Plus, Search, X } from "lucide-react";
-import { useState } from "react";
+import {
+  Mail,
+  Phone,
+  MoreVertical,
+  Plus,
+  Search,
+  X,
+  Edit3,
+  Trash2,
+} from "lucide-react";
+import { useState, useMemo } from "react";
 import api from "../services/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -9,7 +18,7 @@ import type { IUser } from "@/interfaces";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { memberSchema, type MemberFormType } from "../validation";
-import { useMemo } from "react";
+
 function Modal({
   isOpen,
   onClose,
@@ -45,6 +54,8 @@ function Modal({
 export function TeamPage() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -104,12 +115,7 @@ export function TeamPage() {
 
   const filteredUsers = useMemo(() => {
     return users.filter((user: IUser) => {
-      // role filtering
-      if (roleFilter !== "all" && user.role !== roleFilter) {
-        return false;
-      }
-
-      // search filtering
+      if (roleFilter !== "all" && user.role !== roleFilter) return false;
       if (search.trim() !== "") {
         const text = search.toLowerCase();
         return (
@@ -117,7 +123,6 @@ export function TeamPage() {
           user.email?.toLowerCase().includes(text)
         );
       }
-
       return true;
     });
   }, [users, search, roleFilter]);
@@ -152,37 +157,16 @@ export function TeamPage() {
           />
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Badge
-            variant={roleFilter === "all" ? "secondary" : "outline"}
-            onClick={() => setRoleFilter("all")}
-            className="cursor-pointer"
-          >
-            All Roles
-          </Badge>
-
-          <Badge
-            variant={roleFilter === "Admin" ? "secondary" : "outline"}
-            onClick={() => setRoleFilter("Admin")}
-            className="cursor-pointer"
-          >
-            Admin
-          </Badge>
-
-          <Badge
-            variant={roleFilter === "Manager" ? "secondary" : "outline"}
-            onClick={() => setRoleFilter("Manager")}
-            className="cursor-pointer"
-          >
-            Manager
-          </Badge>
-
-          <Badge
-            variant={roleFilter === "Developer" ? "secondary" : "outline"}
-            onClick={() => setRoleFilter("Developer")}
-            className="cursor-pointer"
-          >
-            Developer
-          </Badge>
+          {["all", "Admin", "Manager", "Developer"].map((role) => (
+            <Badge
+              key={role}
+              variant={roleFilter === role ? "secondary" : "outline"}
+              onClick={() => setRoleFilter(role)}
+              className="cursor-pointer"
+            >
+              {role === "all" ? "All Roles" : role}
+            </Badge>
+          ))}
         </div>
       </div>
 
@@ -195,7 +179,7 @@ export function TeamPage() {
           {filteredUsers.map((user: IUser) => (
             <div
               key={user.id}
-              className="rounded-xl border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow overflow-hidden group"
+              className="rounded-xl border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow overflow-hidden group relative"
             >
               <div className="h-24 bg-gradient-to-r from-primary/20 to-primary/5"></div>
               <div className="px-6 pb-6 relative">
@@ -207,9 +191,52 @@ export function TeamPage() {
                       alt={user.name}
                     />
                   </span>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 mb-2">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
+
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 mb-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(
+                          openMenuId === String(user.id)
+                            ? null
+                            : String(user.id),
+                        );
+                      }}
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+
+                    {openMenuId === String(user.id) && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setOpenMenuId(null)}
+                        />
+                        <div className="absolute right-0 top-10 w-36 bg-popover border rounded-md shadow-lg z-20 py-1 animate-in fade-in zoom-in-95 duration-100">
+                          <button
+                            className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-muted transition-colors font-medium text-left"
+                            onClick={() => {
+                              setOpenMenuId(null);
+                            }}
+                          >
+                            <Edit3 className="w-3.5 h-3.5" /> Edit Member
+                          </button>
+                          <div className="h-px bg-border my-1" />
+                          <button
+                            className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-destructive/10 text-destructive transition-colors font-medium text-left"
+                            onClick={() => {
+                              setOpenMenuId(null);
+                            }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Delete Member
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-1 text-center sm:text-left">
@@ -271,7 +298,6 @@ export function TeamPage() {
               {...register("email")}
               onChange={handleEmailChange}
             />
-
             {errors.email && (
               <p className="text-red-500 text-xs">{errors.email.message}</p>
             )}
@@ -280,9 +306,6 @@ export function TeamPage() {
                 <option key={u.id} value={u.email} />
               ))}
             </datalist>
-            <p className="text-xs text-muted-foreground">
-              Select an existing email to auto-fill details, or type a new one.
-            </p>
           </div>
 
           <div className="space-y-2">
@@ -295,7 +318,6 @@ export function TeamPage() {
               placeholder="e.g., John Doe"
               {...register("name")}
             />
-
             {errors.name && (
               <p className="text-red-500 text-xs">{errors.name.message}</p>
             )}
@@ -324,9 +346,6 @@ export function TeamPage() {
                 placeholder="e.g. 01012345678"
                 {...register("phone")}
               />
-              <p className="text-xs text-muted-foreground">
-                Must start with 010, 011, 012, or 015 and be 11 digits total
-              </p>
               {errors.phone && (
                 <p className="text-red-500 text-xs">{errors.phone.message}</p>
               )}

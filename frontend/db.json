@@ -59,7 +59,7 @@
     {
       "title": "Integrate payment gateway",
       "description": "Set up Stripe for subscription billing",
-      "status": "in_progress",
+      "status": "todo",
       "assigneeId": "4",
       "projectId": "1",
       "id": "9"
