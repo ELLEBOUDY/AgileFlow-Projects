@@ -93,7 +93,6 @@ export function ProfileDropdown({
           }`}
         />
       </button>
-
       {/* Dropdown Menu */}
       {isOpen && (
         <>

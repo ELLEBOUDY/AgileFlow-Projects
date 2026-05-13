@@ -98,3 +98,23 @@ export const resetPasswordSchema = z.object({
   path: ["confirmPassword"],
 });
 export type ResetPasswordFormType = z.infer<typeof resetPasswordSchema>;
+
+export const projectSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Project title is required")
+    .min(3, "Title must be at least 3 characters")
+    .max(100, "Title must not exceed 100 characters"),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .min(10, "Description must be at least 10 characters")
+    .max(500, "Description must not exceed 500 characters"),
+  status: z.enum(["in_progress", "planning", "completed"]),
+  progress: z
+    .number()
+    .min(0, "Progress must be at least 0")
+    .max(100, "Progress must not exceed 100"),
+});
+
+export type ProjectFormType = z.infer<typeof projectSchema>;

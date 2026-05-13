@@ -6,7 +6,7 @@
       "description": "Create high-fidelity mockups for the new marketing landing page",
       "status": "in_progress",
       "assigneeId": 1,
-      "projectId": "1"
+      "projectId": null
     },
     {
       "id": "2",
@@ -14,7 +14,7 @@
       "description": "Build login, register, and password reset functionality",
       "status": "review",
       "assigneeId": 2,
-      "projectId": "1"
+      "projectId": null
     },
     {
       "id": "3",
@@ -22,7 +22,7 @@
       "description": "Configure GitHub Actions for automated testing and deployment",
       "status": "review",
       "assigneeId": 3,
-      "projectId": "2"
+      "projectId": null
     },
     {
       "id": "4",
@@ -30,7 +30,7 @@
       "description": "Document all REST API endpoints with examples",
       "status": "todo",
       "assigneeId": 1,
-      "projectId": "1"
+      "projectId": null
     },
     {
       "id": "5",
@@ -38,7 +38,7 @@
       "description": "Improve slow queries identified in performance audit",
       "status": "done",
       "assigneeId": 4,
-      "projectId": "2"
+      "projectId": null
     },
     {
       "id": "6",
@@ -54,14 +54,14 @@
       "description": "Address mobile breakpoint problems on dashboard",
       "status": "done",
       "assigneeId": 3,
-      "projectId": "1"
+      "projectId": null
     },
     {
       "title": "Integrate payment gateway",
       "description": "Set up Stripe for subscription billing",
       "status": "todo",
       "assigneeId": "4",
-      "projectId": "1",
+      "projectId": null,
       "id": "9"
     },
     {
@@ -69,7 +69,7 @@
       "description": "asdasdasd",
       "status": "done",
       "assigneeId": "3",
-      "projectId": "1",
+      "projectId": null,
       "id": "nsp7regcNLg"
     },
     {
@@ -77,7 +77,7 @@
       "description": "vvvvvvvvvvvvvvvvvv",
       "status": "done",
       "assigneeId": "3",
-      "projectId": "1",
+      "projectId": null,
       "id": "oTFfnCCARO0"
     },
     {
@@ -85,31 +85,17 @@
       "description": "sadasdasdasd",
       "status": "done",
       "assigneeId": "1",
-      "projectId": "1",
+      "projectId": null,
       "id": "dq8UONJ1pbg"
     }
   ],
   "projects": [
     {
-      "id": "1",
-      "title": "AgileFlow UI Revamp",
-      "description": "Complete redesign of the AgileFlow user interface with modern components and dark mode support.",
-      "status": "in_progress",
-      "progress": 72
-    },
-    {
-      "id": "2",
-      "title": "Backend API v2",
-      "description": "Building the next generation REST API with improved performance and new features.",
-      "status": "in_progress",
-      "progress": 45
-    },
-    {
-      "id": "3",
       "title": "Mobile App Launch",
       "description": "Cross-platform mobile application for iOS and Android using React Native.",
       "status": "planning",
-      "progress": 15
+      "progress": 66,
+      "id": "3"
     },
     {
       "id": "4",
@@ -119,11 +105,32 @@
       "progress": 60
     },
     {
-      "id": "5",
       "title": "Security Audit Q3",
-      "description": "Comprehensive security review and vulnerability assessment.",
+      "description": "Comprehensive security review and vulnerabilityeeeeeeeeeee assessment.",
+      "status": "planning",
+      "progress": 99.999,
+      "id": "5"
+    },
+    {
+      "title": "sdads",
+      "description": "asdasdasdasd",
+      "status": "in_progress",
+      "progress": 44,
+      "id": "HqYeCvzTyhA"
+    },
+    {
+      "title": "sdfsdf",
+      "description": "asdfasdfsadfasdfasdf",
       "status": "completed",
-      "progress": 100
+      "progress": 99,
+      "id": "RIF6qMMePMg"
+    },
+    {
+      "title": "fgfg",
+      "description": "fggffgfgfff",
+      "status": "completed",
+      "progress": 99.999,
+      "id": "OSqk9Y02qiw"
     }
   ],
   "users": [
