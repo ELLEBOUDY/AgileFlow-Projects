@@ -68,3 +68,53 @@ export const taskSchema = z.object({
 });
 
 export type TaskFormType = z.infer<typeof taskSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+});
+export type ForgotPasswordFormType = z.infer<typeof forgotPasswordSchema>;
+
+export const verifyCodeSchema = z.object({
+  code: z
+    .string()
+    .min(1, "Verification code is required")
+    .length(6, "Code must be exactly 6 characters"),
+});
+export type VerifyCodeFormType = z.infer<typeof verifyCodeSchema>;
+
+export const resetPasswordSchema = z.object({
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
+  confirmPassword: z
+    .string()
+    .min(1, "Confirm Password is required"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+export type ResetPasswordFormType = z.infer<typeof resetPasswordSchema>;
+
+export const projectSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Project title is required")
+    .min(3, "Title must be at least 3 characters")
+    .max(100, "Title must not exceed 100 characters"),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .min(10, "Description must be at least 10 characters")
+    .max(500, "Description must not exceed 500 characters"),
+  status: z.enum(["in_progress", "planning", "completed"]),
+  progress: z
+    .number()
+    .min(0, "Progress must be at least 0")
+    .max(100, "Progress must not exceed 100"),
+});
+
+export type ProjectFormType = z.infer<typeof projectSchema>;
