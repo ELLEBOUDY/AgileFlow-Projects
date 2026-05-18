@@ -12,7 +12,7 @@
       "id": "2",
       "title": "Implement user authentication flow",
       "description": "Build login, register, and password reset functionality",
-      "status": "review",
+      "status": "done",
       "assigneeId": 2,
       "projectId": null
     },
@@ -20,7 +20,7 @@
       "id": "3",
       "title": "Set up CI/CD pipeline",
       "description": "Configure GitHub Actions for automated testing and deployment",
-      "status": "review",
+      "status": "todo",
       "assigneeId": 3,
       "projectId": null
     },
@@ -44,7 +44,7 @@
       "id": "6",
       "title": "Create onboarding tutorial",
       "description": "Build interactive walkthrough for new users",
-      "status": "todo",
+      "status": "done",
       "assigneeId": 2,
       "projectId": "3"
     },
@@ -52,7 +52,7 @@
       "id": "7",
       "title": "Fix responsive layout issues",
       "description": "Address mobile breakpoint problems on dashboard",
-      "status": "done",
+      "status": "in_progress",
       "assigneeId": 3,
       "projectId": null
     },
@@ -75,7 +75,7 @@
     {
       "title": "vvv",
       "description": "vvvvvvvvvvvvvvvvvv",
-      "status": "done",
+      "status": "review",
       "assigneeId": "3",
       "projectId": null,
       "id": "oTFfnCCARO0"
@@ -83,7 +83,7 @@
     {
       "title": "asd",
       "description": "sadasdasdasd",
-      "status": "done",
+      "status": "todo",
       "assigneeId": "1",
       "projectId": null,
       "id": "dq8UONJ1pbg"
@@ -105,13 +105,6 @@
       "progress": 60
     },
     {
-      "title": "Security Audit Q3",
-      "description": "Comprehensive security review and vulnerabilityeeeeeeeeeee assessment.",
-      "status": "planning",
-      "progress": 99.999,
-      "id": "5"
-    },
-    {
       "title": "sdads",
       "description": "asdasdasdasd",
       "status": "in_progress",
@@ -124,13 +117,6 @@
       "status": "completed",
       "progress": 99,
       "id": "RIF6qMMePMg"
-    },
-    {
-      "title": "fgfg",
-      "description": "fggffgfgfff",
-      "status": "completed",
-      "progress": 99.999,
-      "id": "OSqk9Y02qiw"
     }
   ],
   "users": [
@@ -193,22 +179,6 @@
   ],
   "files": [
     {
-      "id": "2",
-      "name": "UI_Design_Assets.pdf",
-      "type": "zip",
-      "size": "145 MB",
-      "date": "Oct 10, 2026",
-      "uploader": "Mike T."
-    },
-    {
-      "id": "3",
-      "name": "Project_Requirements.docx",
-      "type": "doc",
-      "size": "1.1 MB",
-      "date": "Oct 08, 2026",
-      "uploader": "Admin"
-    },
-    {
       "id": "4",
       "name": "Architecture_Diagram.png",
       "type": "img",
@@ -239,6 +209,14 @@
       "date": "May 11, 2026",
       "uploader": "Current User",
       "id": "iO5L45IOMIk"
+    },
+    {
+      "name": "Youssef_Mohamed_Ragab_FlowCV_Resume_2026-05-12.pdf",
+      "type": "pdf",
+      "size": "60 KB",
+      "date": "May 17, 2026",
+      "uploader": "Current User",
+      "id": "8RT6YsCwYWo"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
