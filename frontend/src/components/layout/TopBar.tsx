@@ -1,27 +1,34 @@
-import { Search, Bell, Sun, Moon, LogOut, Menu } from "lucide-react";
+import { Search, Bell, Sun, Moon, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "../ui/button";
+import {  ProfileDropdown } from "../ProfileDropdown";
 
 export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false); 
+  const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
-  
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    navigate('/login');
+    localStorage.removeItem("isAuthenticated");
+    navigate("/login");
+  };
+
+  // Mock user data - replace with actual user data from your state management
+  const currentUser = {
+    name: "Mahmoud",
+    email: "mahmoud@agileflow.com",
+    role: "Admin",
+    phone: "+1 (555) 123-4567",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
   };
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-x-4 border-b bg-background px-4 sm:gap-x-6 sm:px-6 lg:px-8">
-      
       {/* Hamburger (mobile only) */}
       <button
         onClick={onMenuClick}
@@ -51,9 +58,9 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             <button
               type="button"
               className="-m-2.5 p-2.5 text-muted-foreground hover:text-foreground"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             >
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <Sun className="h-5 w-5" />
               ) : (
                 <Moon className="h-5 w-5" />
@@ -66,29 +73,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive border border-background"></span>
           </button>
 
-          <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-border" />
-
-          <div className="flex items-center gap-x-4">
-            <img
-              className="h-8 w-8 rounded-full bg-accent"
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-              alt="User"
-            />
-            <span className="hidden lg:flex lg:items-center">
-              <span className="text-sm font-semibold text-foreground mr-4">
-                Mahmoud
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="text-muted-foreground hover:text-destructive"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </span>
-          </div>
+          <ProfileDropdown  user={currentUser} onLogout={handleLogout} />
         </div>
       </div>
     </header>

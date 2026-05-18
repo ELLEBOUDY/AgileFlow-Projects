@@ -20,7 +20,7 @@ const navigation = [
   { name: 'Task Board', href: '/task-board', icon: KanbanSquare },
   { name: 'Team', href: '/team', icon: Users },
   { name: 'Files', href: '/files', icon: FileText },
-  { name: 'Reports', href: '/reports', icon: BarChart2 },
+  // { name: 'Reports', href: '/reports', icon: BarChart2 },
 ];
 
 export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (open: boolean) => void }) {
@@ -101,7 +101,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (op
             Settings
           </NavLink>
 
-          <NavLink
+          {/* <NavLink
             to="/admin"
             onClick={() => setIsOpen(false)}
             className={({ isActive }) =>
@@ -115,7 +115,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (op
           >
             <ShieldAlert className="mr-3 h-5 w-5 shrink-0" />
             Admin Console
-          </NavLink>
+          </NavLink> */}
         </div>
       </div>
     </>
