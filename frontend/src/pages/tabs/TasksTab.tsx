@@ -37,13 +37,13 @@ export default function TasksTab({
         tasks.map((task) => (
           <div
             key={task.id}
-            className="border border-slate-800/80 bg-[#0b1329]/40 hover:bg-[#0b1329]/80 rounded-xl p-4 flex justify-between items-center transition shadow-sm group"
+            className="border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0b1329]/40 hover:bg-slate-50 dark:hover:bg-[#0b1329]/80 rounded-xl p-4 flex justify-between items-center transition shadow-sm hover:shadow dark:shadow-none group"
           >
             <div className="space-y-1 pr-4">
-              <p className="font-semibold text-sm sm:text-base text-slate-200">
+              <p className="font-semibold text-sm sm:text-base text-slate-800 dark:text-slate-200">
                 {task.title}
               </p>
-              <p className="text-xs sm:text-sm text-slate-400 line-clamp-1">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-1">
                 {task.description || "No core summary provided."}
               </p>
             </div>
@@ -56,7 +56,7 @@ export default function TasksTab({
                 {task.status?.replace("_", " ")}
               </Badge>
 
-              <div className="flex gap-1.5 opacity-80 md:opacity-0 group-hover:opacity-100 transition duration-200">
+              <div className="flex gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition duration-200">
                 <button
                   onClick={() => onEditTask(task)}
                   className="p-2 rounded-lg hover:bg-blue-500/10 text-slate-400 hover:text-blue-400 transition"
