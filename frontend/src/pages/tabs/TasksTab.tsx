@@ -12,7 +12,6 @@ export default function TasksTab({
   onEditTask,
   onDeleteTask,
 }: TasksTabProps) {
-  // 🎨 تعديل دالة الألوان لتناسب الـ Light والـ Dark معاً باستخدام درجات متوازنة
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "todo":
@@ -38,18 +37,13 @@ export default function TasksTab({
         tasks.map((task) => (
           <div
             key={task.id}
-            /* 🔄 تغيير الخلفية والحدود:
-               في الـ Light: خلفية بيضاء ساطعة، حدود هادية، وهوفير رمادي خفيف جداً
-               في الـ Dark: بيرجع لشياكة الـ Dark القديمة بتاعتك بالظبط
-            */
+           
             className="border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0b1329]/40 hover:bg-slate-50 dark:hover:bg-[#0b1329]/80 rounded-xl p-4 flex justify-between items-center transition shadow-sm hover:shadow dark:shadow-none group"
           >
             <div className="space-y-1 pr-4">
-              {/* عنوان التاسك: رمادي داكن يقارب الأسود في الـ Light، وأبيض في الـ Dark */}
               <p className="font-semibold text-sm sm:text-base text-slate-800 dark:text-slate-200">
                 {task.title}
               </p>
-              {/* الوصف: متباين وواضح في الوضعين */}
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-1">
                 {task.description || "No core summary provided."}
               </p>
@@ -63,7 +57,6 @@ export default function TasksTab({
                 {task.status?.replace("_", " ")}
               </Badge>
 
-              {/* أزرار التحكم: متوافقة مع الخلفية البيضاء والخلفية الكحلي */}
               <div className="flex gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition duration-200">
                 <button
                   onClick={() => onEditTask(task)}
