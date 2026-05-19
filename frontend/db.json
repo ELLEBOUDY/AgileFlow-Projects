@@ -21,8 +21,8 @@
       "title": "Set up CI/CD pipeline",
       "description": "Configure GitHub Actions for automated testing and deployment",
       "status": "review",
-      "assigneeId": 3,
-      "projectId": "2"
+      "projectId": "2",
+      "assigneeId": 3
     },
     {
       "id": "4",
