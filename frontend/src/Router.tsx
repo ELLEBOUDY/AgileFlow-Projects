@@ -3,6 +3,7 @@ import MainLayout from "./components/layout/MainLayout";
 import AuthLayout from "./components/layout/AuthLayout";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
+import ProjectDetailsPage from "./pages/ProjectDetails";
 import { MyTasksPage } from "./pages/MyTasksPage";
 import { TaskBoardPage } from "./pages/TaskBoardPage";
 import { TeamPage } from "./pages/TeamPage";
@@ -16,11 +17,17 @@ import { FilesPage } from "./pages/FilesPage";
 import { ReportsPage } from "./pages/ReportsPage";
 
 // const checkAuth = () => {
+
 //   const isAuth = localStorage.getItem("isAuthenticated") === "true";
+
 //   if (!isAuth) {
+
 //     throw redirect("/login");
+
 //   }
+
 //   return null;
+
 // };
 
 export const router = createBrowserRouter([
@@ -60,6 +67,10 @@ export const router = createBrowserRouter([
       {
         path: "projects",
         element: <ProjectsPage />,
+      },
+      {
+        path: "projects/:id", // 👈 ضفنا المسار الديناميكي ده هنا جوة الـ MainLayout
+        element: <ProjectDetailsPage />,
       },
       {
         path: "my-tasks",

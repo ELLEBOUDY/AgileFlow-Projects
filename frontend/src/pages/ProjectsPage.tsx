@@ -20,20 +20,15 @@ export function ProjectsPage() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] =
-    useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const [isModalOpen, setIsModalOpen] =
-    useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [editingProject, setEditingProject] =
-    useState<IProject | null>(null);
+  const [editingProject, setEditingProject] = useState<IProject | null>(null);
 
-  const [isDeleteModalOpen, setIsDeleteModalOpen] =
-    useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  const [projectToDelete, setProjectToDelete] =
-    useState<string | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects"],
@@ -48,16 +43,13 @@ export function ProjectsPage() {
       if (editingProject) {
         const { data } = await api.put(
           `/projects/${editingProject.id}`,
-          project
+          project,
         );
 
         return data;
       }
 
-      const { data } = await api.post(
-        "/projects",
-        project
-      );
+      const { data } = await api.post("/projects", project);
 
       return data;
     },
@@ -86,10 +78,7 @@ export function ProjectsPage() {
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project: IProject) => {
-      if (
-        statusFilter !== "all" &&
-        project.status !== statusFilter
-      ) {
+      if (statusFilter !== "all" && project.status !== statusFilter) {
         return false;
       }
 
@@ -98,9 +87,7 @@ export function ProjectsPage() {
 
         return (
           project.title.toLowerCase().includes(text) ||
-          project.description
-            ?.toLowerCase()
-            .includes(text)
+          project.description?.toLowerCase().includes(text)
         );
       }
 
@@ -108,9 +95,7 @@ export function ProjectsPage() {
     });
   }, [projects, search, statusFilter]);
 
-  const handleSubmitProject = (
-    data: ProjectFormType
-  ) => {
+  const handleSubmitProject = (data: ProjectFormType) => {
     createProjectMutation.mutate(data);
   };
 
@@ -142,9 +127,7 @@ export function ProjectsPage() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">
-            Projects
-          </h2>
+          <h2 className="text-3xl font-bold tracking-tight">Projects</h2>
 
           <p className="text-muted-foreground mt-1">
             Manage and track all your ongoing projects.
@@ -192,9 +175,7 @@ export function ProjectsPage() {
         onClose={handleCloseModal}
         editingProject={editingProject}
         onSubmit={handleSubmitProject}
-        isSubmitting={
-          createProjectMutation.isPending
-        }
+        isSubmitting={createProjectMutation.isPending}
       />
 
       <DeleteProjectModal
@@ -204,9 +185,7 @@ export function ProjectsPage() {
           setProjectToDelete(null);
         }}
         onConfirm={confirmDeleteProject}
-        isLoading={
-          deleteProjectMutation.isPending
-        }
+        isLoading={deleteProjectMutation.isPending}
       />
     </div>
   );
