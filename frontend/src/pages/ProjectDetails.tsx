@@ -520,7 +520,7 @@ export default function ProjectDetailsPage() {
               onClick={() => addTaskMutation.mutate(taskForm)}
               disabled={addTaskMutation.isPending}
             >
-              {addTaskMutation.isPending ? "Saving Task..." : "Commit Task"}
+              {addTaskMutation.isPending ? "Saving Task..." : "Create Task"}
             </Button>
           </div>
         </DialogContent>
@@ -569,7 +569,7 @@ export default function ProjectDetailsPage() {
               }
               disabled={editTaskMutation.isPending}
             >
-              {editTaskMutation.isPending ? "Updating..." : "Push Changes"}
+              {editTaskMutation.isPending ? "Updating..." : "Submit Changes"}
             </Button>
           </div>
         </DialogContent>
