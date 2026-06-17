@@ -3,9 +3,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { loginSchema, type LoginFormType } from "@/validation/index"
+import { loginSchema, type LoginFormType } from "@/validation/index";
+import { toast } from "react-toastify";
+import { useAppDispatch } from "@/store/hooks";
+import { login } from "@/store/slices/authSlice";
+import api from "@/services/api";
+import axios from "axios";
 
 export function LoginPage() {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const {
@@ -16,11 +22,31 @@ export function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (_data: LoginFormType) => {
-    // Simulate login
-    console.log("Logging in with:", _data);
-    localStorage.setItem("isAuthenticated", "true");
-    navigate("/");
+  const onSubmit = async (data: LoginFormType) => {
+    try {
+      const response = await api.post("/api/users/login/", {
+        email: data.email,
+        password: data.password,
+      });
+
+      dispatch(
+        login({
+          user: response.data.user,
+          accessToken: response.data.access,
+        }),
+      );
+
+      // ✅ Add your success toast here!
+      toast.success("Welcome back! Logged in successfully.");
+
+      navigate("/");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const msg =
+          error.response?.data?.detail || "Invalid email or password.";
+        toast.error(msg);
+      }
+    }
   };
 
   return (
@@ -56,7 +82,10 @@ export function LoginPage() {
             >
               Password
             </label>
-            <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-primary hover:underline"
+            >
               Forgot password?
             </Link>
           </div>

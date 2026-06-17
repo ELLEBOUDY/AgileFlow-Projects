@@ -4,25 +4,25 @@
       "id": "1",
       "title": "Design new landing page mockup",
       "description": "Create high-fidelity mockups for the new marketing landing page",
-      "status": "in_progress",
+      "status": "todo",
       "assigneeId": 1,
-      "projectId": null
+      "projectId": "1"
     },
     {
       "id": "2",
       "title": "Implement user authentication flow",
       "description": "Build login, register, and password reset functionality",
-      "status": "done",
+      "status": "review",
       "assigneeId": 2,
-      "projectId": null
+      "projectId": "1"
     },
     {
       "id": "3",
       "title": "Set up CI/CD pipeline",
       "description": "Configure GitHub Actions for automated testing and deployment",
-      "status": "todo",
-      "assigneeId": 3,
-      "projectId": null
+      "status": "in_progress",
+      "projectId": "2",
+      "assigneeId": 3
     },
     {
       "id": "4",
@@ -30,21 +30,21 @@
       "description": "Document all REST API endpoints with examples",
       "status": "todo",
       "assigneeId": 1,
-      "projectId": null
+      "projectId": "1"
     },
     {
       "id": "5",
       "title": "Optimize database queries",
       "description": "Improve slow queries identified in performance audit",
       "status": "done",
-      "assigneeId": 4,
-      "projectId": null
+      "projectId": "2",
+      "assigneeId": 4
     },
     {
       "id": "6",
       "title": "Create onboarding tutorial",
       "description": "Build interactive walkthrough for new users",
-      "status": "done",
+      "status": "review",
       "assigneeId": 2,
       "projectId": "3"
     },
@@ -52,50 +52,56 @@
       "id": "7",
       "title": "Fix responsive layout issues",
       "description": "Address mobile breakpoint problems on dashboard",
-      "status": "in_progress",
+      "status": "done",
       "assigneeId": 3,
-      "projectId": null
+      "projectId": "1"
     },
     {
       "title": "Integrate payment gateway",
       "description": "Set up Stripe for subscription billing",
       "status": "todo",
       "assigneeId": "4",
-      "projectId": null,
+      "projectId": "1",
       "id": "9"
-    },
-    {
-      "title": "asas",
-      "description": "asdasdasd",
-      "status": "done",
-      "assigneeId": "3",
-      "projectId": null,
-      "id": "nsp7regcNLg"
     },
     {
       "title": "vvv",
       "description": "vvvvvvvvvvvvvvvvvv",
-      "status": "review",
+      "status": "done",
       "assigneeId": "3",
-      "projectId": null,
+      "projectId": "1",
       "id": "oTFfnCCARO0"
     },
     {
-      "title": "asd",
-      "description": "sadasdasdasd",
+      "title": "dshjkdsj",
+      "description": "fasdfasdfasdfasd",
       "status": "todo",
+      "projectId": "2",
       "assigneeId": "1",
-      "projectId": null,
-      "id": "dq8UONJ1pbg"
+      "id": "yf9JKEvboRo"
     }
   ],
   "projects": [
     {
+      "title": "AgileFlow UI Revamp",
+      "description": "Complete redesign of the AgileFlow user interface with modern components and dark mode support.",
+      "status": "in_progress",
+      "progress": 72,
+      "id": "1"
+    },
+    {
+      "id": "2",
+      "title": "Backend API v2",
+      "description": "Building the next generation REST API with improved performance and new features.",
+      "status": "in_progress",
+      "progress": 45
+    },
+    {
+      "id": "3",
       "title": "Mobile App Launch",
       "description": "Cross-platform mobile application for iOS and Android using React Native.",
       "status": "planning",
-      "progress": 66,
-      "id": "3"
+      "progress": 15
     },
     {
       "id": "4",
@@ -105,18 +111,11 @@
       "progress": 60
     },
     {
-      "title": "sdads",
-      "description": "asdasdasdasd",
-      "status": "in_progress",
-      "progress": 44,
-      "id": "HqYeCvzTyhA"
-    },
-    {
-      "title": "sdfsdf",
-      "description": "asdfasdfsadfasdfasdf",
+      "id": "5",
+      "title": "Security Audit Q3",
+      "description": "Comprehensive security review and vulnerability assessment.",
       "status": "completed",
-      "progress": 99,
-      "id": "RIF6qMMePMg"
+      "progress": 100
     }
   ],
   "users": [
@@ -179,6 +178,22 @@
   ],
   "files": [
     {
+      "id": "2",
+      "name": "UI_Design_Assets.pdf",
+      "type": "zip",
+      "size": "145 MB",
+      "date": "Oct 10, 2026",
+      "uploader": "Mike T."
+    },
+    {
+      "id": "3",
+      "name": "Project_Requirements.docx",
+      "type": "doc",
+      "size": "1.1 MB",
+      "date": "Oct 08, 2026",
+      "uploader": "Admin"
+    },
+    {
       "id": "4",
       "name": "Architecture_Diagram.png",
       "type": "img",
@@ -203,20 +218,24 @@
       "id": "tppaHZvSNE8"
     },
     {
-      "name": "myfile.txt",
-      "type": "txt",
-      "size": "0 KB",
-      "date": "May 11, 2026",
+      "name": "project_management_db.sql",
+      "url": "https://www.google.com",
+      "type": "sql",
+      "size": "0.01 MB",
+      "date": "May 19, 2026",
       "uploader": "Current User",
-      "id": "iO5L45IOMIk"
+      "projectId": "2",
+      "id": "m7TK6p6na24"
     },
     {
-      "name": "Youssef_Mohamed_Ragab_FlowCV_Resume_2026-05-12.pdf",
+      "name": "AgileFlow_Phase2.pdf",
+      "url": "https://www.google.com",
       "type": "pdf",
-      "size": "60 KB",
-      "date": "May 17, 2026",
+      "size": "0.96 MB",
+      "date": "May 19, 2026",
       "uploader": "Current User",
-      "id": "8RT6YsCwYWo"
+      "projectId": "1",
+      "id": "PtMVkyiF8T4"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

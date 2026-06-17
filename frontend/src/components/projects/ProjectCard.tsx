@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import type { IProject } from "@/interfaces";
 import { Badge } from "@/components/ui/badge";
 import ProjectActionsMenu from "./ProjectActionsMenu";
@@ -8,30 +9,33 @@ interface ProjectCardProps {
   onDelete: (id: string) => void;
 }
 
-const ProjectCard = ({
-  project,
-  onEdit,
-  onDelete,
-}: ProjectCardProps) => {
+const ProjectCard = ({ project, onEdit, onDelete }: ProjectCardProps) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    navigate(`/projects/${project.id}`);
+  };
+
   return (
-    <div className="group rounded-xl border bg-card text-card-foreground shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-all relative">
+    <div
+      onClick={handleCardClick}
+      className="group rounded-xl border bg-card text-card-foreground shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-all relative cursor-pointer hover:border-slate-700"
+    >
       <div>
         <div className="flex justify-between items-start mb-4">
           <Badge
-            variant={
-              project.status === "in_progress"
-                ? "default"
-                : "secondary"
-            }
+            variant={project.status === "in_progress" ? "default" : "secondary"}
             className="capitalize"
           >
             {project.status.replace("_", " ")}
           </Badge>
 
-          <ProjectActionsMenu
-            onEdit={() => onEdit(project)}
-            onDelete={() => onDelete(project.id)}
-          />
+          <div onClick={(e) => e.stopPropagation()}>
+            <ProjectActionsMenu
+              onEdit={() => onEdit(project)}
+              onDelete={() => onDelete(project.id)}
+            />
+          </div>
         </div>
 
         <h3 className="font-semibold text-lg leading-tight mb-2">
@@ -39,8 +43,7 @@ const ProjectCard = ({
         </h3>
 
         <p className="text-sm text-muted-foreground line-clamp-2 mb-6">
-          {project.description ||
-            "No description provided for this project."}
+          {project.description || "No description provided for this project."}
         </p>
       </div>
 
@@ -54,9 +57,7 @@ const ProjectCard = ({
           <div className="h-2 bg-secondary rounded-full overflow-hidden">
             <div
               className={`h-full ${
-                project.progress === 100
-                  ? "bg-green-500"
-                  : "bg-primary"
+                project.progress === 100 ? "bg-green-500" : "bg-primary"
               }`}
               style={{ width: `${project.progress}%` }}
             />
@@ -77,9 +78,7 @@ const ProjectCard = ({
             ))}
           </div>
 
-          <span className="text-xs text-muted-foreground">
-            Updated 2d ago
-          </span>
+          <span className="text-xs text-muted-foreground">Updated 2d ago</span>
         </div>
       </div>
     </div>
