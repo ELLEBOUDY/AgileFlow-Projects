@@ -5,6 +5,7 @@ from .models import Team, Project, Task, Comment, Notification, File
 from .serializers import (TeamSerializer, ProjectSerializer, TaskSerializer, CommentSerializer
                           ,FileSerializer, NotificationSerializer)
 from .permissions import IsTeamMemberOrManagerOrAdmin
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class IsTeamManagerOrAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -50,7 +51,6 @@ class ProjectListCreateView(generics.ListCreateAPIView):
         if self.request.user.role == 'member':
             raise PermissionDenied("Members are not allowed to create projects.")
         
-        # لو الفرونت مبعتش تيم، الباك إند بيلحق نفسه وياخد أول تيم موجود في الداتابيز
         if 'team' not in self.request.data:
             first_team = Team.objects.first()
             if first_team:
@@ -143,19 +143,19 @@ class FileListCreateView(generics.ListCreateAPIView):
     queryset = File.objects.all()
     serializer_class = FileSerializer
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser] # 👈 ضروري عشان الـ FormData من الفرونتد
 
     def get_queryset(self):
         queryset = File.objects.all()
         project_id = self.request.query_params.get('project')
         
         if project_id is not None:
-            # بنجيب الفايلات عن طريق العلاقة الممتدة: الفايل تابع لتاسك، والتاسك تابعة للبروجكت
             queryset = queryset.filter(task__project_id=project_id)
             
         return queryset
 
     def perform_create(self, serializer):
-        # عشان نضمن إن اللي بيرفع الفايل يتسجل هو الـ uploaded_by أوتوماتيك
+        # دجانجو هيسيف الملف ويربطه باليوزر اللي رافع
         serializer.save(uploaded_by=self.request.user)
 
     

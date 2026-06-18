@@ -15,7 +15,7 @@ export function MyTasksPage() {
   const { data: tasks = [], isLoading } = useQuery<ITask[]>({
     queryKey: ["tasks"],
     queryFn: async () => {
-      const { data } = await api.get("/tasks");
+      const { data } = await api.get("projects/tasks");
       return data;
     },
   });
@@ -29,7 +29,7 @@ export function MyTasksPage() {
       currentStatus: string;
     }) => {
       const newStatus = currentStatus === "done" ? "todo" : "done";
-      await api.patch(`/tasks/${taskId}`, { status: newStatus });
+      await api.patch(`projects/tasks/${taskId}`, { status: newStatus });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });

@@ -259,7 +259,7 @@ export function TeamPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 flex gap-2">
+                {/* <div className="mt-6 flex gap-2">
                   <Button
                     variant="outline"
                     className="w-full text-xs"
@@ -274,7 +274,7 @@ export function TeamPage() {
                   >
                     Profile
                   </Button>
-                </div>
+                </div> */}
               </div>
             </div>
           ))}

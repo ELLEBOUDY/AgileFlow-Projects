@@ -28,16 +28,23 @@ class TeamSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer): 
     title = serializers.CharField(source='project_name')
     team_name = serializers.CharField(source='team.team_name', read_only=True)
+    team_members = serializers.PrimaryKeyRelatedField(source='team.members', many=True, read_only=True)
+    
+    manager_name = serializers.CharField(source='team.manager.username', read_only=True)
+    manager_email = serializers.CharField(source='team.manager.email', read_only=True)
 
     class Meta:
         model = Project
-        fields = ['id', 'title', 'description', 'start_date', 'end_date', 'status', 'progress', 'team', 'team_name', 'created_at']
+        fields = [
+            'id', 'title', 'description', 'start_date', 'end_date', 
+            'status', 'progress', 'team', 'team_name', 'team_members', 
+            'manager_name', 'manager_email', 'created_at' #
+        ]
 
-    # الدالة دي مخصصة لقفش الإيرور وطباعته في الـ Terminal عندك 🕵️‍♂️
     def is_valid(self, raise_exception=False):
         valid = super().is_valid(raise_exception=False)
         if not valid:
-            print("❌ ENGINE VALIDATION ERRORS:", self.errors) # هيطبع لك الإيرور في الكونسول الأسود بتاع ديجانجو
+            print("❌ ENGINE VALIDATION ERRORS:", self.errors) 
         if raise_exception and not valid:
             raise serializers.ValidationError(self.errors)
         return valid
@@ -54,12 +61,15 @@ class ProjectSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+# 1. تحديث الـ TaskSerializer عشان نضمن شكل بيانات مريح للـ Dropdown والعرض
 class TaskSerializer(serializers.ModelSerializer):
-    """
-    Serializer to handle Task CRUD operations, with assignee and project details.
-    """
     project_name = serializers.CharField(source='project.project_name', read_only=True)
     assigned_to_email = serializers.CharField(source='assigned_to.email', read_only=True)
+    assigned_to_username = serializers.CharField(source='assigned_to.username', read_only=True) # زادت للعرض
+    
+    # حقل وهمي عشان لو الـ Frontend بيدور على title بدل task_title في الـ Dropdown
+    title = serializers.CharField(source='task_title', read_only=True) 
+
     assigned_to = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(role='member'),
         required=False,
@@ -69,9 +79,23 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = [
-            'id', 'task_title', 'description', 'priority', 
+            'id', 'task_title', 'title', 'description', 'priority', 
             'status', 'deadline', 'project', 'project_name', 
-            'assigned_to', 'assigned_to_email', 'created_at'
+            'assigned_to', 'assigned_to_email', 'assigned_to_username', 'created_at'
+        ]
+
+
+# 2. تحديث الـ FileSerializer عشان يرجع اسم وإيميل الشخص اللي رفع الملف
+class FileSerializer(serializers.ModelSerializer):
+    uploaded_by_email = serializers.CharField(source='uploaded_by.email', read_only=True)
+    uploaded_by_name = serializers.CharField(source='uploaded_by.username', read_only=True) # ✨ الحل هنا لاسم الرافع!
+    task_title = serializers.CharField(source='task.task_title', read_only=True) # عشان يظهر اسم التاسك جنب الملف لو حبيت
+
+    class Meta:
+        model = File
+        fields = [
+            'id', 'file_name', 'file_path', 'task', 'task_title',
+            'uploaded_by', 'uploaded_by_name', 'uploaded_by_email', 'upload_date'
         ]
 
 
@@ -80,13 +104,6 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'content', 'task', 'user', 'user_email', 'created_at']
-
-
-class FileSerializer(serializers.ModelSerializer):
-    uploaded_by_email = serializers.CharField(source='uploaded_by.email', read_only=True)
-    class Meta:
-        model = File
-        fields = ['id', 'file_name', 'file_path', 'task', 'uploaded_by', 'uploaded_by_email', 'upload_date']
 
 
 class NotificationSerializer(serializers.ModelSerializer):

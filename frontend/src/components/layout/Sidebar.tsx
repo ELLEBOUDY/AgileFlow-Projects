@@ -9,21 +9,27 @@ import {
   Settings,
   ShieldAlert,
   KanbanSquare,
-  X
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Projects', href: '/projects', icon: Briefcase },
-  { name: 'My Tasks', href: '/my-tasks', icon: CheckSquare },
-  { name: 'Task Board', href: '/task-board', icon: KanbanSquare },
-  { name: 'Team', href: '/team', icon: Users },
-  { name: 'Files', href: '/files', icon: FileText },
+  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Projects", href: "/projects", icon: Briefcase },
+  { name: "My Tasks", href: "/my-tasks", icon: CheckSquare },
+  { name: "Task Board", href: "/task-board", icon: KanbanSquare },
+  { name: "Team", href: "/team", icon: Users },
+  // { name: 'Files', href: '/files', icon: FileText },
   // { name: 'Reports', href: '/reports', icon: BarChart2 },
 ];
 
-export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (open: boolean) => void }) {
+export function Sidebar({
+  isOpen,
+  setIsOpen,
+}: {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+}) {
   return (
     <>
       {/* Overlay (mobile) */}
@@ -31,7 +37,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (op
         onClick={() => setIsOpen(false)}
         className={cn(
           "fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity",
-          isOpen ? "opacity-100 visible" : "opacity-0 invisible"
+          isOpen ? "opacity-100 visible" : "opacity-0 invisible",
         )}
       />
 
@@ -40,7 +46,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (op
         className={cn(
           "flex h-full w-64 flex-col bg-card border-r fixed inset-y-0 left-0 z-50 transform transition-transform duration-300",
           isOpen ? "translate-x-0" : "-translate-x-full",
-          "lg:static lg:translate-x-0 lg:z-auto"
+          "lg:static lg:translate-x-0 lg:z-auto",
         )}
       >
         {/* Header */}
@@ -53,10 +59,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (op
           </h1>
 
           {/* Close button (mobile only) */}
-          <button
-            onClick={() => setIsOpen(false)}
-            className="lg:hidden"
-          >
+          <button onClick={() => setIsOpen(false)} className="lg:hidden">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -73,7 +76,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (op
                     isActive
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-                    "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+                    "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
                   )
                 }
               >
@@ -93,7 +96,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (op
                 isActive
                   ? "bg-accent text-accent-foreground"
                   : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-                "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors"
+                "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
               )
             }
           >

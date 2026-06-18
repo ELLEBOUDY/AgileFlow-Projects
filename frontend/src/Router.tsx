@@ -13,7 +13,7 @@ import { RegisterPage } from "./pages/auth/RegisterPage";
 import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
 import { VerifyCodePage } from "./pages/auth/VerifyCodePage";
 import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
-import { FilesPage } from "./pages/FilesPage";
+// import { FilesPage } from "./pages/FilesPage";
 import { ReportsPage } from "./pages/ReportsPage";
 
 /**
@@ -101,10 +101,10 @@ export const router = createBrowserRouter([
         path: "team",
         element: <TeamPage />,
       },
-      {
-        path: "files",
-        element: <FilesPage />,
-      },
+      // {
+      //   path: "files",
+      //   element: <FilesPage />,
+      // },
       {
         path: "reports",
         element: <ReportsPage />,

@@ -42,9 +42,9 @@ class Project(models.Model):
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
     
-    # ➕ الحقول الجديدة اللي ناقصة الداتابيز:
+    
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
-    progress = models.IntegerField(default=0) # بيبدأ من 0% لحد 100%
+    progress = models.IntegerField(default=0) 
 
     # Project is assigned to one Team (1:M)
     team = models.ForeignKey(

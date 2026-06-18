@@ -1,8 +1,9 @@
 from django.shortcuts import render
 from rest_framework import generics
+from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny,IsAuthenticated
 from django.contrib.auth import get_user_model
-from .serializers import UserRegisterSerializer
+from .serializers import UserRegisterSerializer,UserSerializer
 
 User = get_user_model()
 
@@ -16,5 +17,5 @@ class RegisterView(generics.CreateAPIView):
 
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
-    # عشان مش أي حد يشوف اليوزرز إلا لو مسجل دخول
+    serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
