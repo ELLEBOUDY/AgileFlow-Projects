@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+// ==========================================
+// 1. Login Schema
+// ==========================================
 export const loginSchema = z.object({
   email: z
     .string()
@@ -13,6 +16,9 @@ export const loginSchema = z.object({
 
 export type LoginFormType = z.infer<typeof loginSchema>;
 
+// ==========================================
+// 2. Register Schema
+// ==========================================
 export const registerSchema = z.object({
   name: z
     .string()
@@ -30,6 +36,9 @@ export const registerSchema = z.object({
 
 export type RegisterFormType = z.infer<typeof registerSchema>;
 
+// ==========================================
+// 3. Member Schema
+// ==========================================
 export const memberSchema = z.object({
   name: z
     .string()
@@ -51,6 +60,9 @@ export const memberSchema = z.object({
 
 export type MemberFormType = z.infer<typeof memberSchema>;
 
+// ==========================================
+// 4. Task Schema
+// ==========================================
 export const taskSchema = z.object({
   title: z
     .string()
@@ -62,13 +74,14 @@ export const taskSchema = z.object({
     .min(1, "Description is required")
     .min(10, "Description must be at least 10 characters"),
   status: z.enum(["todo", "in_progress", "review", "done"]),
-  assigneeId: z
-    .string()
-    .min(1, "Please assign this task to someone"),
+  assigneeId: z.string().min(1, "Please assign this task to someone"),
 });
 
 export type TaskFormType = z.infer<typeof taskSchema>;
 
+// ==========================================
+// 5. Auth / Password Recovery Schemas
+// ==========================================
 export const forgotPasswordSchema = z.object({
   email: z
     .string()
@@ -85,20 +98,23 @@ export const verifyCodeSchema = z.object({
 });
 export type VerifyCodeFormType = z.infer<typeof verifyCodeSchema>;
 
-export const resetPasswordSchema = z.object({
-  password: z
-    .string()
-    .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters"),
-  confirmPassword: z
-    .string()
-    .min(1, "Confirm Password is required"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+export const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(1, "Password is required")
+      .min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(1, "Confirm Password is required"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 export type ResetPasswordFormType = z.infer<typeof resetPasswordSchema>;
 
+// ==========================================
+// 6. Project Schema
+// ==========================================
 export const projectSchema = z.object({
   title: z
     .string()
@@ -115,6 +131,11 @@ export const projectSchema = z.object({
     .number()
     .min(0, "Progress must be at least 0")
     .max(100, "Progress must not exceed 100"),
+  team: z.number().optional().nullable(),
+
+  // ➕ إضافة حقول التواريخ الجديدة هنا:
+  start_date: z.string().optional().nullable().or(z.literal("")),
+  end_date: z.string().optional().nullable().or(z.literal("")),
 });
 
 export type ProjectFormType = z.infer<typeof projectSchema>;

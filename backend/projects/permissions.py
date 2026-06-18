@@ -4,24 +4,27 @@ from .models import Team
 class IsTeamMemberOrManagerOrAdmin(permissions.BasePermission):
     """
     Custom permission to ensure only team members, their manager, or admins
-    can view or interact with project components (Tasks, Comments).
+    can view or interact with project components (Projects, Tasks, Comments).
     """
     def has_object_permission(self, request, view, obj):
         # 1. Admin always has full access
         if request.user.role == 'admin':
             return True
 
-        # 2. Extract the team based on the object type
-        # If we are checking a Task, obj.project.team gives us the team
-        # If we are checking a Comment, obj.task.project.team gives us the team
+        # 2. Extract the team based on the object type (Project, Task, or Comment)
+        team = None
         try:
-            if hasattr(obj, 'project'): # For Project or Task
-                team = obj.team if hasattr(obj, 'team') else obj.project.team
-            elif hasattr(obj, 'task'): # For Comment or File
+            if hasattr(obj, 'team'):  # Object is a Project (has direct team field)
+                team = obj.team
+            elif hasattr(obj, 'project'):  # Object is a Task (go through project to get team)
+                team = obj.project.team
+            elif hasattr(obj, 'task'):  # Object is a Comment (go through task then project to get team)
                 team = obj.task.project.team
-            else:
-                return False
         except AttributeError:
+            return False
+
+        # If team cannot be resolved for any reason, deny access
+        if not team:
             return False
 
         # 3. Check if the user is the Manager of this team

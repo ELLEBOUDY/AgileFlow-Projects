@@ -10,10 +10,13 @@ export interface IProject {
   id: string;
   title: string;
   description: string;
-  status: "in_progress" | "planning" | "completed";
+  status: "planning" | "in_progress" | "completed";
   progress: number;
+  team?: number;
+  team_name?: string;
+  start_date?: string;
+  end_date?: string;
 }
-
 export interface ITask {
   id: string;
   title: string;

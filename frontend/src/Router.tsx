@@ -16,23 +16,38 @@ import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
 import { FilesPage } from "./pages/FilesPage";
 import { ReportsPage } from "./pages/ReportsPage";
 
-// const checkAuth = () => {
+/**
+ * Authentication loader guard to secure private routes
+ * Redirects to login if tokens or flags are missing
+ */
+const protectedRouteLoader = () => {
+  const isAuth = localStorage.getItem("isAuthenticated") === "true";
+  const token = localStorage.getItem("access_token");
 
-//   const isAuth = localStorage.getItem("isAuthenticated") === "true";
+  if (!isAuth || !token) {
+    return redirect("/login");
+  }
+  return null;
+};
 
-//   if (!isAuth) {
+/**
+ * Guest loader guard to prevent logged-in users from accessing auth pages
+ */
+const authRouteLoader = () => {
+  const isAuth = localStorage.getItem("isAuthenticated") === "true";
+  const token = localStorage.getItem("access_token");
 
-//     throw redirect("/login");
-
-//   }
-
-//   return null;
-
-// };
+  if (isAuth && token) {
+    return redirect("/");
+  }
+  return null;
+};
 
 export const router = createBrowserRouter([
+  // Guest & Authentication Public Routes
   {
     element: <AuthLayout />,
+    loader: authRouteLoader,
     children: [
       {
         path: "login",
@@ -56,9 +71,11 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  // Protected Application Private Routes
   {
     path: "/",
     element: <MainLayout />,
+    loader: protectedRouteLoader,
     children: [
       {
         index: true,
@@ -69,7 +86,7 @@ export const router = createBrowserRouter([
         element: <ProjectsPage />,
       },
       {
-        path: "projects/:id", // 👈 ضفنا المسار الديناميكي ده هنا جوة الـ MainLayout
+        path: "projects/:id",
         element: <ProjectDetailsPage />,
       },
       {

@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Users, CheckSquare, Paperclip } from "lucide-react";
-import api from "@/services/api";
+import { api } from "@/services/api"; // Updated to use the secure token-injected instance
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -39,7 +39,7 @@ import {
 } from "recharts";
 
 export default function ProjectDetailsPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -66,45 +66,61 @@ export default function ProjectDetailsPage() {
     type: "task" | "file";
   } | null>(null);
 
+  // 1. Fetch live single project details from Django
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ["project", id],
     queryFn: async () => {
-      const { data } = await api.get(`/projects/${id}`);
+      // Points to: api/projects/projects/{id}/
+      const { data } = await api.get(`projects/projects/${id}/`);
       return data;
     },
   });
 
+  // 2. Fetch tasks filtered by project from Django
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ["projectTasks", id],
     queryFn: async () => {
-      const { data } = await api.get("/tasks");
-      return data.filter((task: any) => String(task.projectId) === String(id));
-    },
-  });
-
-  const { data: users = [] } = useQuery({
-    queryKey: ["users"],
-    queryFn: async () => {
-      const { data } = await api.get("/users");
+      // Points to: api/projects/tasks/?project={id}
+      const { data } = await api.get(`projects/tasks/?project=${id}`);
       return data;
     },
   });
 
-  const { data: files = [] } = useQuery({
-    queryKey: ["files", id],
+  // 3. Fetch core system users (Corrected path to match login app base)
+  // تعديل سطر 73 تقريباً في الفرونت إند
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+
     queryFn: async () => {
-      const { data } = await api.get("/files");
-      return data.filter((file: any) => String(file.projectId) === String(id));
+      // Points to: api/users/
+
+      // NOTE: If you don't have a list view in users/urls.py yet, this might 404 until you add it.
+
+      const { data } = await api.get("users/");
+
+      return data;
     },
   });
 
+  // 4. Fetch dynamic files attached to this specific project
+  const { data: files = [] } = useQuery({
+    queryKey: ["files", id],
+    queryFn: async () => {
+      // Points to: api/projects/files/?project={id}
+      const { data } = await api.get(`projects/files/?project=${id}`);
+      return data;
+    },
+  });
+
+  // 5. Create real task integrated with Django backend
   const addTaskMutation = useMutation({
     mutationFn: async (newTask: typeof taskForm) => {
-      return await api.post("/tasks", {
-        ...newTask,
-        projectId: String(id),
-        assigneeId: "1",
-        id: Math.random().toString(36).substr(2, 9),
+      // Points to: api/projects/tasks/
+      return await api.post("projects/tasks/", {
+        title: newTask.title,
+        description: newTask.description,
+        status: newTask.status,
+        project: Number(id),
       });
     },
     onSuccess: () => {
@@ -114,12 +130,15 @@ export default function ProjectDetailsPage() {
     },
   });
 
+  // 6. Update operational task details inside database
   const editTaskMutation = useMutation({
     mutationFn: async (updatedTask: any) => {
-      return await api.put(`/tasks/${updatedTask.id}`, {
-        ...updatedTask,
-        projectId: String(id),
-        assigneeId: editingTask?.assigneeId || "1",
+      // Points to: api/projects/tasks/{id}/
+      return await api.put(`projects/tasks/${updatedTask.id}/`, {
+        title: updatedTask.title,
+        description: updatedTask.description,
+        status: updatedTask.status,
+        project: Number(id),
       });
     },
     onSuccess: () => {
@@ -129,40 +148,38 @@ export default function ProjectDetailsPage() {
     },
   });
 
+  // 7. Delete task permanently
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: string) => {
-      return await api.delete(`/tasks/${taskId}`);
+      // Points to: api/projects/tasks/{id}/
+      return await api.delete(`projects/tasks/${taskId}/`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projectTasks", id] });
     },
   });
 
+  // 8. Upload file mapping database
   const addFileMutation = useMutation({
     mutationFn: async (newFile: any) => {
-      return await api.post("/files", {
-        ...newFile,
-        projectId: String(id),
-        id: Math.random().toString(36).substr(2, 9),
+      // Points to: api/projects/files/
+      return await api.post("projects/files/", {
+        name: newFile.name,
+        file_url: newFile.url,
+        project: Number(id),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["files", id] });
       setIsAddFileOpen(false);
-      setFileForm({
-        name: "",
-        url: "",
-        type: "",
-        size: "",
-        date: "",
-        uploader: "",
-      });
     },
   });
 
+  // 9. Destroy document payload entry
   const deleteFileMutation = useMutation({
     mutationFn: async (fileId: string) => {
-      return await api.delete(`/files/${fileId}`);
+      // Points to: api/projects/files/{id}/
+      return await api.delete(`projects/files/${fileId}/`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["files", id] });
@@ -196,6 +213,7 @@ export default function ProjectDetailsPage() {
     );
   }
 
+  // Calculated metrics parsed matching backend statuses
   const todoCount = tasks.filter(
     (t: any) => t.status?.toLowerCase() === "todo",
   ).length;
@@ -227,7 +245,8 @@ export default function ProjectDetailsPage() {
   ];
 
   const projectManager =
-    users.find((u: any) => u.role === "Manager" || u.id === "5") || users[0];
+    users.find((u: any) => u.role === "Manager" || u.id === project.manager) ||
+    users[0];
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -245,7 +264,7 @@ export default function ProjectDetailsPage() {
         <div className="space-y-4 flex-1">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl font-bold tracking-tight">
-              {project.title}
+              {project.name || project.title}
             </h1>
             <Badge className="capitalize bg-primary/10 text-primary border border-primary/20 hover:bg-primary/10">
               {project.status?.replace("_", " ")}
@@ -263,13 +282,13 @@ export default function ProjectDetailsPage() {
                 Overall Project Progress
               </span>
               <span className="font-semibold text-primary">
-                {project.progress}%
+                {project.progress || 0}%
               </span>
             </div>
             <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary transition-all duration-500"
-                style={{ width: `${project.progress}%` }}
+                style={{ width: `${project.progress || 0}%` }}
               />
             </div>
           </div>
@@ -285,10 +304,10 @@ export default function ProjectDetailsPage() {
             </div>
             <div>
               <p className="text-sm font-semibold leading-none">
-                {projectManager?.name || "Mahmoud"}
+                {projectManager?.name || "Manager"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {projectManager?.role || "Manager"}
+                {projectManager?.role || "Management"}
               </p>
             </div>
           </div>
@@ -441,7 +460,6 @@ export default function ProjectDetailsPage() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold tracking-tight">Workspace Hub</h2>
           <div className="flex gap-2">
-            {/*uploading button*/}
             <Button
               variant="outline"
               onClick={() => setIsAddFileOpen(true)}
@@ -575,7 +593,7 @@ export default function ProjectDetailsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Add File Dialog  Mocking */}
+      {/* Add File Dialog */}
       <Dialog open={isAddFileOpen} onOpenChange={setIsAddFileOpen}>
         <DialogContent className="sm:max-w-[425px] bg-[#0b1329] text-slate-100 border-slate-800">
           <DialogHeader>
@@ -593,14 +611,10 @@ export default function ProjectDetailsPage() {
                   if (file) {
                     setFileForm({
                       name: file.name,
-                      url: "https://www.google.com",
+                      url: "https://mockstorage.local/files/" + file.name,
                       type: file.name.split(".").pop() || "unknown",
                       size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-                      date: new Date().toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "2-digit",
-                        year: "numeric",
-                      }), // May 19, 2026
+                      date: new Date().toLocaleDateString("en-US"),
                       uploader: "Current User",
                     });
                   }
@@ -612,28 +626,20 @@ export default function ProjectDetailsPage() {
                   ? `Selected: ${fileForm.name}`
                   : "Click to browse any file from your device"}
               </p>
-              {fileForm.size && (
-                <p className="text-[11px] text-emerald-400 mt-1">
-                  Ready to mock: {fileForm.size} ({fileForm.type.toUpperCase()})
-                </p>
-              )}
             </div>
 
             <Button
               className="w-full mt-2"
-              onClick={() => {
-                addFileMutation.mutate(fileForm);
-              }}
+              onClick={() => addFileMutation.mutate(fileForm)}
               disabled={addFileMutation.isPending || !fileForm.name}
             >
-              {addFileMutation.isPending
-                ? "Simulating Upload..."
-                : "Attach Document"}
+              {addFileMutation.isPending ? "Uploading..." : "Attach Document"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirmation Dialog */}
       <AlertDialog
         open={itemToDelete !== null}
         onOpenChange={(open) => !open && setItemToDelete(null)}

@@ -28,7 +28,7 @@
       "id": "4",
       "title": "Write API documentation",
       "description": "Document all REST API endpoints with examples",
-      "status": "todo",
+      "status": "in_progress",
       "assigneeId": 1,
       "projectId": "1"
     },
@@ -79,6 +79,14 @@
       "projectId": "2",
       "assigneeId": "1",
       "id": "yf9JKEvboRo"
+    },
+    {
+      "title": "asasas",
+      "description": "dasfdsfsd",
+      "status": "in_progress",
+      "projectId": "1",
+      "assigneeId": "1",
+      "id": "uoYDGFEvLfo"
     }
   ],
   "projects": [
@@ -236,6 +244,16 @@
       "uploader": "Current User",
       "projectId": "1",
       "id": "PtMVkyiF8T4"
+    },
+    {
+      "name": "Screenshot 2026-04-12 155014.png",
+      "url": "https://www.google.com",
+      "type": "png",
+      "size": "0.02 MB",
+      "date": "Jun 05, 2026",
+      "uploader": "Current User",
+      "projectId": "1",
+      "id": "kk3xo20yAtk"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

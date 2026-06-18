@@ -26,14 +26,32 @@ class TeamSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer): 
-    """
-    Serializer to handle Project CRUD operations tied to a specific Team.
-    """
+    title = serializers.CharField(source='project_name')
     team_name = serializers.CharField(source='team.team_name', read_only=True)
 
     class Meta:
         model = Project
-        fields = ['id', 'project_name', 'description', 'start_date', 'end_date', 'team', 'team_name', 'created_at']
+        fields = ['id', 'title', 'description', 'start_date', 'end_date', 'status', 'progress', 'team', 'team_name', 'created_at']
+
+    # الدالة دي مخصصة لقفش الإيرور وطباعته في الـ Terminal عندك 🕵️‍♂️
+    def is_valid(self, raise_exception=False):
+        valid = super().is_valid(raise_exception=False)
+        if not valid:
+            print("❌ ENGINE VALIDATION ERRORS:", self.errors) # هيطبع لك الإيرور في الكونسول الأسود بتاع ديجانجو
+        if raise_exception and not valid:
+            raise serializers.ValidationError(self.errors)
+        return valid
+
+    def create(self, validated_data):
+        if 'team' not in validated_data or validated_data['team'] is None:
+            from .models import Team
+            validated_data['team'] = Team.objects.first()
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if 'team' not in validated_data or validated_data['team'] is None:
+            validated_data['team'] = instance.team
+        return super().update(instance, validated_data)
 
 
 class TaskSerializer(serializers.ModelSerializer):

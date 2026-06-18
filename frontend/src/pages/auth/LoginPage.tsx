@@ -1,12 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { loginSchema, type LoginFormType } from "@/validation/index"
+import { loginSchema, type LoginFormType } from "@/validation/index";
+import { api } from "@/services/api"; // Imported the configured axios instance
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const {
     register,
@@ -16,11 +19,31 @@ export function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (_data: LoginFormType) => {
-    // Simulate login
-    console.log("Logging in with:", _data);
-    localStorage.setItem("isAuthenticated", "true");
-    navigate("/");
+  const onSubmit = async (data: LoginFormType) => {
+    try {
+      setApiError(null);
+
+      // Send credentials to backend login endpoint
+      const response = await api.post("users/login/", {
+        email: data.email,
+        password: data.password,
+      });
+
+      // Store Auth tokens and role in local storage
+      localStorage.setItem("access_token", response.data.access);
+      localStorage.setItem("user_role", response.data.role);
+      localStorage.setItem("isAuthenticated", "true");
+
+      // Redirect user to the main dashboard
+      navigate("/");
+    } catch (error: any) {
+      // Handle login failure and display backend message
+      const errorMsg =
+        error.response?.data?.detail ||
+        "Invalid email or password. Please try again.";
+      setApiError(errorMsg);
+      console.error("Authentication failed:", error);
+    }
   };
 
   return (
@@ -33,6 +56,13 @@ export function LoginPage() {
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+        {/* Backend Global Error Display */}
+        {apiError && (
+          <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md text-left">
+            {apiError}
+          </div>
+        )}
+
         <div className="space-y-2 text-left">
           <label className="text-sm font-medium leading-none" htmlFor="email">
             Email address
@@ -56,7 +86,10 @@ export function LoginPage() {
             >
               Password
             </label>
-            <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-primary hover:underline"
+            >
               Forgot password?
             </Link>
           </div>

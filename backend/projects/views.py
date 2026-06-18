@@ -7,14 +7,12 @@ from .serializers import (TeamSerializer, ProjectSerializer, TaskSerializer, Com
 from .permissions import IsTeamMemberOrManagerOrAdmin
 
 class IsTeamManagerOrAdmin(permissions.BasePermission):
-    """
-    صلاحية مخصصة: تسمح بالـ GET للجميع، ولكن التعديل والمسح والإنشاء للأدمن والمدير فقط.
-    """
     def has_object_permission(self, request, view, obj):
-        # لو الطلب قراءة (GET, HEAD, OPTIONS)، مسموح للموظفين عادي
+        # anyone can perform(GET)
         if request.method in SAFE_METHODS:
             return True
-        # لو تعديل أو مسح، لازم يكون أدمن أو هو مدير التيم نفسه
+        
+        #only admin and manager of the team can update    
         return request.user.role == 'admin' or obj.manager == request.user
 
 
@@ -24,15 +22,22 @@ class TeamListCreateView(generics.ListCreateAPIView):
     serializer_class = TeamSerializer
     permission_classes = [IsAuthenticated]
 
+    # only admin and manager can create team
     def perform_create(self, serializer):
         if self.request.user.role == 'member':
-            raise PermissionDenied("Members are not allowed to create teams.")
+            raise PermissionDenied("Members are not allowed to create teams. Only Managers and Admins can.")
         serializer.save()
 
 class TeamDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
     permission_classes = [IsAuthenticated, IsTeamManagerOrAdmin]
+
+    # only admin can delete team
+    def perform_destroy(self, instance):
+        if self.request.user.role != 'admin':
+            raise PermissionDenied("Only Admins are allowed to delete teams.")
+        instance.delete()
 
 
 # ------------------ 2. PROJECTS VIEWS ------------------
@@ -44,12 +49,25 @@ class ProjectListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         if self.request.user.role == 'member':
             raise PermissionDenied("Members are not allowed to create projects.")
+        
+        # لو الفرونت مبعتش تيم، الباك إند بيلحق نفسه وياخد أول تيم موجود في الداتابيز
+        if 'team' not in self.request.data:
+            first_team = Team.objects.first()
+            if first_team:
+                serializer.save(team=first_team)
+                return
         serializer.save()
 
 class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated, IsTeamMemberOrManagerOrAdmin]
+
+    #  only admin can delete a project
+    def perform_destroy(self, instance):
+        if self.request.user.role != 'admin':
+            raise PermissionDenied("Only Admins are allowed to delete projects.")
+        instance.delete()
 
 
 # ------------------ 3. TASKS VIEWS ------------------
@@ -58,10 +76,10 @@ class TaskListCreateView(generics.ListCreateAPIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
 
+    # only admin and manage can add task
     def perform_create(self, serializer):
-        user = self.request.user
-        if user.role == 'member':
-            raise PermissionDenied("Members are not allowed to create tasks. Only Managers and Admins can.")
+        if self.request.user.role == 'member':
+            raise PermissionDenied("Members are not allowed to create tasks.")
         serializer.save()
         
     def get_queryset(self):
@@ -71,7 +89,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
         if user.role != 'admin':
             queryset = Task.objects.filter(project__team__manager=user) | Task.objects.filter(project__team__members=user)
         
-        project_id = self.request.query_params.get('project_id')
+        project_id = self.request.query_params.get('project') 
         if project_id is not None:
             queryset = queryset.filter(project_id=project_id)
             
@@ -125,6 +143,22 @@ class FileListCreateView(generics.ListCreateAPIView):
     queryset = File.objects.all()
     serializer_class = FileSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = File.objects.all()
+        project_id = self.request.query_params.get('project')
+        
+        if project_id is not None:
+            # بنجيب الفايلات عن طريق العلاقة الممتدة: الفايل تابع لتاسك، والتاسك تابعة للبروجكت
+            queryset = queryset.filter(task__project_id=project_id)
+            
+        return queryset
+
+    def perform_create(self, serializer):
+        # عشان نضمن إن اللي بيرفع الفايل يتسجل هو الـ uploaded_by أوتوماتيك
+        serializer.save(uploaded_by=self.request.user)
+
+    
 
 class NotificationListCreateView(generics.ListCreateAPIView):
     queryset = Notification.objects.all()
