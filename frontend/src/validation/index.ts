@@ -50,7 +50,7 @@ export const memberSchema = z.object({
     .min(1, "Email is required")
     .email("Please enter a valid email address"),
 
-  role: z.enum(["Admin", "Developer", "Designer", "Manager"]),
+  role: z.enum(["Admin", "Member", "Manager"]),
 
   phone: z
     .string()

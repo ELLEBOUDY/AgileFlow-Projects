@@ -17,8 +17,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
 } from "recharts";
 import api from "../services/api";
 import { Badge } from "../components/ui/badge";
@@ -55,7 +53,7 @@ export function DashboardPage() {
   const { data: tasks = [], isLoading: isLoadingTasks } = useQuery<ITask[]>({
     queryKey: ["tasks"],
     queryFn: async () => {
-      const { data } = await api.get("projectsprojects/tasks");
+      const { data } = await api.get("projects/tasks");
       return data;
     },
   });
@@ -63,7 +61,7 @@ export function DashboardPage() {
   const { data: users = [], isLoading: isLoadingUsers } = useQuery<IUser[]>({
     queryKey: ["users"],
     queryFn: async () => {
-      const { data } = await api.get("projects/users");
+      const { data } = await api.get("/users");
       return data;
     },
   });
@@ -117,13 +115,20 @@ export function DashboardPage() {
     },
   ];
 
-  const projectChartData = projects.map((p) => ({
-    name: p.title,
-    progress: p.progress,
-  }));
+  const getUserInitials = (user: any) => {
+    const displayName = user.name || user.username || "";
+    if (!displayName) return "U";
+    return displayName
+      .split(" ")
+      .filter(Boolean)
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const managers = users.filter(
-    (u) => u.role === "Admin" || u.role === "Developer",
+    (u: any) => u.role === "admin" || u.role === "manager" || u.is_staff,
   );
 
   return (
@@ -158,7 +163,7 @@ export function DashboardPage() {
 
       {/* Charts */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <div className="rounded-xl border bg-card text-card-foreground shadow-sm lg:col-span-4 p-6">
+        <div className="rounded-xl border bg-card text-card-foreground shadow-sm lg:col-span-7 p-6">
           <h3 className="font-semibold leading-none tracking-tight mb-4">
             Productivity Overview
           </h3>
@@ -166,7 +171,7 @@ export function DashboardPage() {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={chartData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <defs>
                   <linearGradient
@@ -195,12 +200,14 @@ export function DashboardPage() {
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
+                  dy={10}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
+                  dx={-5}
                 />
                 <Tooltip
                   contentStyle={{
@@ -230,60 +237,6 @@ export function DashboardPage() {
             </ResponsiveContainer>
           </div>
         </div>
-
-        {/* <div className="rounded-xl border bg-card text-card-foreground shadow-sm lg:col-span-3 p-4">
-          <h3 className="font-semibold leading-none tracking-tight mb-4">
-            Project Status
-          </h3>
-          <div className="h-[300px] mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={projectChartData}
-                margin={{ top: 10, right: 30, bottom: 0 }}
-                layout="vertical"
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={false}
-                  stroke="hsl(var(--border))"
-                />
-                <XAxis
-                  type="number"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  domain={[0, 100]}
-                />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                  width={150}
-                  interval={0}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    borderColor: "hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                  itemStyle={{ color: "hsl(var(--foreground))" }}
-                  cursor={{ fill: "hsl(var(--muted))" }}
-                />
-                <Bar
-                  dataKey="progress"
-                  fill="#22c55e"
-                  radius={[0, 4, 4, 0]}
-                  barSize={20}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div> */}
       </div>
 
       {/* Project Ecosystem */}
@@ -305,20 +258,17 @@ export function DashboardPage() {
               <h4 className="font-semibold">Teams</h4>
             </div>
             <div className="space-y-4">
-              {users.slice(0, 4).map((user) => (
+              {users.slice(0, 4).map((user: any) => (
                 <div key={user.id} className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">
-                    {user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
+                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold uppercase shrink-0">
+                    {getUserInitials(user)}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium leading-none">
-                      {user.name}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium leading-none truncate">
+                      {user.name || user.username}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {user.role}
+                    <p className="text-xs text-muted-foreground mt-1 truncate">
+                      {user.role || (user.is_staff ? "Admin" : "Member")}
                     </p>
                   </div>
                 </div>
@@ -333,14 +283,14 @@ export function DashboardPage() {
               <h4 className="font-semibold">Project Managers</h4>
             </div>
             <div className="space-y-4">
-              {managers.slice(0, 4).map((user) => (
+              {managers.slice(0, 4).map((user: any) => (
                 <div key={user.id} className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                     <UserCircle className="w-5 h-5" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium leading-none">
-                      {user.name}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium leading-none truncate">
+                      {user.name || user.username}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Lead Oversight
@@ -371,11 +321,11 @@ export function DashboardPage() {
                       <div className="h-1.5 w-24 rounded-full bg-muted overflow-hidden">
                         <div
                           className="h-full bg-green-500"
-                          style={{ width: `${project.progress}%` }}
+                          style={{ width: `${project.progress || 0}%` }}
                         />
                       </div>
                       <span className="text-[10px] text-muted-foreground font-medium">
-                        {project.progress}%
+                        {project.progress || 0}%
                       </span>
                     </div>
                   </div>
@@ -385,7 +335,7 @@ export function DashboardPage() {
                     }
                     className="capitalize text-[10px]"
                   >
-                    {project.status.replace("_", " ")}
+                    {(project.status || "todo").replace("_", " ")}
                   </Badge>
                 </div>
               ))}
@@ -415,13 +365,13 @@ export function DashboardPage() {
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`h-2 w-2 rounded-full ${statusColorMap[task.status]}`}
+                      className={`h-2 w-2 rounded-full ${statusColorMap[task.status] || "bg-slate-400"}`}
                     />
                     <p className="text-sm font-medium">{task.title}</p>
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-xs text-muted-foreground italic">
-                      Project ID: {task.projectId}
+                      Project: {task.title || "Global"}
                     </span>
                     <Badge
                       variant="secondary"

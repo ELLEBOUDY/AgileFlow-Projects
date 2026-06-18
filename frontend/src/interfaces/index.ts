@@ -2,7 +2,7 @@ export interface IUser {
   id?: string | number;
   name: string;
   email: string;
-  role: "Admin" | "Developer" | "Designer" | "Manager";
+  role: "Admin" | "Member" | "Manager";
   phone: string;
 }
 
