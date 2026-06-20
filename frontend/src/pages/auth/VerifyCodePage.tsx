@@ -5,13 +5,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { verifyCodeSchema, type VerifyCodeFormType } from "@/validation/index";
+import { userAPI } from "@/services/api";
 
 export function VerifyCodePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const email = location.state?.email || "your email";
+  const email = location.state?.email || sessionStorage.getItem("reset_email") || "";
   
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [error, setError] = useState<string | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const {
@@ -70,10 +72,24 @@ export function VerifyCodePage() {
     inputRefs.current[nextIndex]?.focus();
   };
 
-  const onSubmit = async (_data: VerifyCodeFormType) => {
-    // Simulate verifying code
-    console.log("Verifying code:", _data.code);
-    navigate("/reset-password");
+  const onSubmit = async (data: VerifyCodeFormType) => {
+    try {
+      setError(null);
+      const resetEmail = email || sessionStorage.getItem("reset_email");
+      if (!resetEmail) {
+        setError("Missing reset email. Start over from Forgot Password.");
+        return;
+      }
+
+      await userAPI.verifyPasswordReset({
+        email: resetEmail,
+        code: data.code,
+      });
+      sessionStorage.setItem("reset_code", data.code);
+      navigate("/reset-password", { state: { email: resetEmail, code: data.code } });
+    } catch (err: any) {
+      setError(err.response?.data?.code?.[0] || err.response?.data?.detail || "Invalid code.");
+    }
   };
 
   return (
@@ -81,9 +97,15 @@ export function VerifyCodePage() {
       <div className="flex flex-col space-y-2 text-center mb-8">
         <h2 className="text-2xl font-semibold tracking-tight">Verify Code</h2>
         <p className="text-sm text-muted-foreground">
-          Enter the 6-digit code sent to <strong>{email}</strong>
+          Enter the 6-digit code sent to <strong>{email || "your email"}</strong>
         </p>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-4">

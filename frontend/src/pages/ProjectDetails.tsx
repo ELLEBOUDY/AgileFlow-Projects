@@ -10,6 +10,7 @@ import {
   Search,
 } from "lucide-react";
 import api from "@/services/api";
+import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -49,6 +50,8 @@ export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useUser();
+  const isAdmin = user?.role === "admin";
 
   // States الخاصة بالتاسكات
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -113,6 +116,8 @@ export default function ProjectDetailsPage() {
   // 5. إضافة تاسك حقيقي مربوط بديجانجو
   const addTaskMutation = useMutation({
     mutationFn: async (formData: any) => {
+      if (!isAdmin) return;
+
       const formattedData = {
         task_title: formData.title || formData.task_title,
         description: formData.description,
@@ -137,6 +142,8 @@ export default function ProjectDetailsPage() {
   // 6. تعديل تاسك حقيقي في الداتابيز
   const editTaskMutation = useMutation({
     mutationFn: async ({ id: taskId, data }: { id: string; data: any }) => {
+      if (!isAdmin) return;
+
       const formattedData = {
         task_title: data.title || data.task_title,
         description: data.description,
@@ -165,6 +172,8 @@ export default function ProjectDetailsPage() {
   // 7. حذف تاسك نهائياً
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: string) => {
+      if (!isAdmin) return;
+
       return await api.delete(`projects/tasks/${taskId}/`);
     },
     onSuccess: () => {
@@ -199,6 +208,8 @@ export default function ProjectDetailsPage() {
   });
 
   const handleEditClick = (task: any) => {
+    if (!isAdmin) return;
+
     setEditingTask(task);
     setTaskForm({
       title: task.task_title || task.title,
@@ -229,8 +240,12 @@ export default function ProjectDetailsPage() {
   const projectMembers = users.filter((u: any) =>
     project.team_members?.some((mId: any) => String(mId) === String(u.id)),
   );
+  const assignableMembers = projectMembers.filter((u: any) => {
+    const role = String(u.role || "").toLowerCase();
+    return role === "member";
+  });
 
-  const canAssignTask = true;
+  const canAssignTask = isAdmin;
 
   // حساب الإحصائيات للشارتات
   const todoCount = tasks.filter(
@@ -499,21 +514,23 @@ export default function ProjectDetailsPage() {
               Add Member
             </Button>
 
-            <Button
-              size="sm"
-              onClick={() => {
-                setTaskForm({
-                  title: "",
-                  description: "",
-                  status: "todo",
-                  assigneeId: "",
-                });
-                setIsAddOpen(true);
-              }}
-              className="bg-primary hover:bg-primary/90 text-xs"
-            >
-              + New Task
-            </Button>
+            {isAdmin && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  setTaskForm({
+                    title: "",
+                    description: "",
+                    status: "todo",
+                    assigneeId: "",
+                  });
+                  setIsAddOpen(true);
+                }}
+                className="bg-primary hover:bg-primary/90 text-xs"
+              >
+                + New Task
+              </Button>
+            )}
           </div>
         </div>
 
@@ -525,7 +542,7 @@ export default function ProjectDetailsPage() {
           files={files}
           onEditTask={handleEditClick}
           onDeleteTask={(taskId: string) =>
-            setItemToDelete({ id: taskId, type: "task" })
+            isAdmin && setItemToDelete({ id: taskId, type: "task" })
           }
           onDeleteFile={(fileId: string) =>
             setItemToDelete({ id: fileId, type: "file" })
@@ -533,6 +550,7 @@ export default function ProjectDetailsPage() {
           onRefreshFiles={() =>
             queryClient.invalidateQueries({ queryKey: ["files", id] })
           }
+          canManageTasks={isAdmin}
         />
       </div>
 
@@ -590,7 +608,7 @@ export default function ProjectDetailsPage() {
       </Dialog>
 
       {/* Add Task Dialog */}
-      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+      <Dialog open={isAdmin && isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="sm:max-w-[425px] bg-[#0b1329] text-slate-100 border-slate-800">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">Create Task</DialogTitle>
@@ -646,7 +664,7 @@ export default function ProjectDetailsPage() {
                     }
                   >
                     <option value="">Unassigned</option>
-                    {projectMembers.map((member: any) => (
+                    {assignableMembers.map((member: any) => (
                       <option key={member.id} value={member.id}>
                         {member.username}
                       </option>
@@ -668,7 +686,7 @@ export default function ProjectDetailsPage() {
       </Dialog>
 
       {/* Edit Task Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+      <Dialog open={isAdmin && isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-[425px] bg-[#0b1329] text-slate-100 border-slate-800">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">Modify Task</DialogTitle>
@@ -722,7 +740,7 @@ export default function ProjectDetailsPage() {
                     }
                   >
                     <option value="">Unassigned</option>
-                    {projectMembers.map((member: any) => (
+                    {assignableMembers.map((member: any) => (
                       <option key={member.id} value={member.id}>
                         {member.username}
                       </option>

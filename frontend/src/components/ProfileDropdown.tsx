@@ -1,29 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Phone, Shield, LogOut, Settings, ChevronDown } from "lucide-react";
+import { User, Mail, Shield, LogOut, Settings, ChevronDown } from "lucide-react";
+import { useUser } from "../hooks/useUser";
 
 interface ProfileDropdownProps {
-  user: {
-    name: string;
-    email: string;
-    role: string;
-    phone?: string;
-    avatar?: string;
-  };
   onLogout: () => void;
   width?: number; // Custom width in pixels (default: 320)
   position?: "left" | "right"; // Position relative to trigger (default: "right")
 }
 
-export function ProfileDropdown({ 
-  user, 
-  onLogout, 
+export function ProfileDropdown({
+  onLogout,
   width = 320,
-  position = "right" 
+  position = "right"
 }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { user, loading } = useUser();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -58,6 +52,31 @@ export function ProfileDropdown({
     };
   }, [isOpen]);
 
+  // Show loading state while fetching
+  if (loading) {
+    return (
+      <div className="flex items-center gap-x-3 rounded-lg px-2 py-1">
+        <div className="h-8 w-8 rounded-full bg-muted animate-pulse"></div>
+        <div className="hidden sm:block">
+          <div className="h-4 w-16 bg-muted animate-pulse rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Transform user data for display
+  const displayUser = user ? {
+    name: user.username || `${user.first_name} ${user.last_name}`.trim(),
+    email: user.email,
+    role: user.role,
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
+  } : {
+    name: "User",
+    email: "Loading...",
+    role: "member",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=User"
+  };
+
   const handleViewProfile = () => {
     setIsOpen(false);
     navigate("/settings");
@@ -81,16 +100,15 @@ export function ProfileDropdown({
       >
         <img
           className="h-8 w-8 rounded-full bg-accent ring-2 ring-transparent hover:ring-primary transition-all"
-          src={user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"}
-          alt={user.name}
+          src={displayUser.avatar}
+          alt={displayUser.name}
         />
         <span className="text-sm font-semibold text-foreground hidden sm:block">
-          {user.name}
+          {displayUser.name}
         </span>
         <ChevronDown
-          className={`h-4 w-4 text-muted-foreground hidden sm:block transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`h-4 w-4 text-muted-foreground hidden sm:block transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+            }`}
         />
       </button>
       {/* Dropdown Menu */}
@@ -98,8 +116,8 @@ export function ProfileDropdown({
         <>
           {/* Backdrop for mobile */}
           <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setIsOpen(false)} />
-          
-          <div 
+
+          <div
             className={`absolute ${positionClass} mt-2 origin-top-right rounded-lg border bg-popover shadow-lg z-50 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200`}
             style={{ width: `${width}px` }}
           >
@@ -107,12 +125,12 @@ export function ProfileDropdown({
             <div className="flex flex-col items-center gap-3 p-4 border-b bg-gradient-to-b from-muted/50 to-transparent">
               <img
                 className="h-16 w-16 rounded-full bg-accent ring-4 ring-primary/20"
-                src={user.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"}
-                alt={user.name}
+                src={displayUser.avatar}
+                alt={displayUser.name}
               />
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-foreground">{user.name}</h3>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
+                <h3 className="text-lg font-semibold text-foreground">{displayUser.name}</h3>
+                <p className="text-sm text-muted-foreground">{displayUser.email}</p>
               </div>
             </div>
 
@@ -122,7 +140,7 @@ export function ProfileDropdown({
                 <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">Name</p>
-                  <p className="text-sm font-medium truncate">{user.name}</p>
+                  <p className="text-sm font-medium truncate">{displayUser.name}</p>
                 </div>
               </div>
 
@@ -130,7 +148,7 @@ export function ProfileDropdown({
                 <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">Email</p>
-                  <p className="text-sm font-medium truncate">{user.email}</p>
+                  <p className="text-sm font-medium truncate">{displayUser.email}</p>
                 </div>
               </div>
 
@@ -138,19 +156,9 @@ export function ProfileDropdown({
                 <Shield className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted-foreground">Role</p>
-                  <p className="text-sm font-medium truncate">{user.role}</p>
+                  <p className="text-sm font-medium truncate">{displayUser.role}</p>
                 </div>
               </div>
-
-              {user.phone && (
-                <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors cursor-default">
-                  <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">Phone</p>
-                    <p className="text-sm font-medium truncate">{user.phone}</p>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Actions */}

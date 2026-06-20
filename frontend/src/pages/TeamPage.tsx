@@ -67,7 +67,7 @@ export function TeamPage() {
     defaultValues: {
       name: "",
       email: "",
-      role: "Developer",
+      role: "member",
       phone: "",
     },
   });
@@ -82,6 +82,15 @@ export function TeamPage() {
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const roleOptions = ["all", "admin", "manager", "member"];
+
+  const formatRole = (value: string) => {
+    if (value === "all") return "All Roles";
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  };
+
+  const normalizeRole = (value: string): MemberFormType["role"] =>
+    value.toLowerCase() as MemberFormType["role"];
 
   const createMember = useMutation({
     mutationFn: async (newUser: IUser) => {
@@ -102,7 +111,7 @@ export function TeamPage() {
     if (existingUser) {
       setValue("email", existingUser.email);
       setValue("name", existingUser.name);
-      setValue("role", existingUser.role);
+      setValue("role", normalizeRole(existingUser.role || "member"));
       setValue("phone", existingUser.phone || "");
     } else {
       setValue("email", selectedEmail);
@@ -115,7 +124,8 @@ export function TeamPage() {
 
   const filteredUsers = useMemo(() => {
     return users.filter((user: IUser) => {
-      if (roleFilter !== "all" && user.role !== roleFilter) return false;
+      const userRole = normalizeRole(user.role || "");
+      if (roleFilter !== "all" && userRole !== roleFilter) return false;
       if (search.trim() !== "") {
         const text = search.toLowerCase();
         return (
@@ -157,14 +167,14 @@ export function TeamPage() {
           />
         </div>
         <div className="flex gap-2 flex-wrap">
-          {["all", "Admin", "Manager", "Developer"].map((role) => (
+          {roleOptions.map((role) => (
             <Badge
               key={role}
               variant={roleFilter === role ? "secondary" : "outline"}
               onClick={() => setRoleFilter(role)}
               className="cursor-pointer"
             >
-              {role === "all" ? "All Roles" : role}
+              {formatRole(role)}
             </Badge>
           ))}
         </div>
@@ -244,7 +254,7 @@ export function TeamPage() {
                     {user.name}
                   </h3>
                   <p className="text-sm text-primary font-medium">
-                    {user.role}
+                    {formatRole(normalizeRole(user.role || ""))}
                   </p>
                 </div>
 
@@ -330,10 +340,9 @@ export function TeamPage() {
                 {...register("role")}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <option value="Admin">Admin</option>
-                <option value="Manager">Manager</option>
-                <option value="Developer">Developer</option>
-                <option value="Designer">Designer</option>
+                <option value="admin">Admin</option>
+                <option value="manager">Manager</option>
+                <option value="member">Member</option>
               </select>
             </div>
             <div className="space-y-2">

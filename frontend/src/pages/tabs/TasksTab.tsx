@@ -6,6 +6,7 @@ interface TasksTabProps {
   users: any[]; // 👈 أضفنا الـ users هنا في الـ Interface
   onEditTask: (task: any) => void;
   onDeleteTask: (id: string) => void;
+  canManageTasks?: boolean;
 }
 
 export default function TasksTab({
@@ -13,6 +14,7 @@ export default function TasksTab({
   users = [], // 👈 استقبلنا الـ users هنا مع قيمة افتراضية مأمنة
   onEditTask,
   onDeleteTask,
+  canManageTasks = false,
 }: TasksTabProps) {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -93,20 +95,22 @@ export default function TasksTab({
                   {task.status?.replace("_", " ")}
                 </Badge>
 
-                <div className="flex gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition duration-200">
-                  <button
-                    onClick={() => onEditTask(task)}
-                    className="p-2 rounded-lg hover:bg-blue-500/10 text-slate-400 hover:text-blue-400 transition"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => onDeleteTask(task.id)}
-                    className="p-2 rounded-lg hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                {canManageTasks && (
+                  <div className="flex gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition duration-200">
+                    <button
+                      onClick={() => onEditTask(task)}
+                      className="p-2 rounded-lg hover:bg-blue-500/10 text-slate-400 hover:text-blue-400 transition"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => onDeleteTask(task.id)}
+                      className="p-2 rounded-lg hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );
