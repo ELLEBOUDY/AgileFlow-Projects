@@ -67,7 +67,7 @@ export function TeamPage() {
     defaultValues: {
       name: "",
       email: "",
-      role: "Developer",
+      role: "Member",
       phone: "",
     },
   });
