@@ -48,8 +48,8 @@ class ProjectListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        if self.request.user.role == 'member':
-            raise PermissionDenied("Members are not allowed to create projects.")
+        if self.request.user.role != 'admin':
+            raise PermissionDenied("Only Admins are allowed to create projects.")
         
         if 'team' not in self.request.data:
             first_team = Team.objects.first()
@@ -76,10 +76,10 @@ class TaskListCreateView(generics.ListCreateAPIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
 
-    # only admin and manage can add task
+    # only admin can add task
     def perform_create(self, serializer):
-        if self.request.user.role == 'member':
-            raise PermissionDenied("Members are not allowed to create tasks.")
+        if self.request.user.role != 'admin':
+            raise PermissionDenied("Only Admins are allowed to create tasks.")
         serializer.save()
         
     def get_queryset(self):
@@ -102,14 +102,14 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         user = self.request.user
-        if user.role == 'member' and set(serializer.validated_data.keys()) != {'status'}:
-            raise PermissionDenied("You are only allowed to update the status of this task.")
+        if user.role != 'admin':
+            raise PermissionDenied("Only Admins are allowed to update tasks.")
         serializer.save()
 
     def perform_destroy(self, instance):
         user = self.request.user
-        if user.role == 'member':
-            raise PermissionDenied("Members are not allowed to delete tasks.")
+        if user.role != 'admin':
+            raise PermissionDenied("Only Admins are allowed to delete tasks.")
         instance.delete()
 
 

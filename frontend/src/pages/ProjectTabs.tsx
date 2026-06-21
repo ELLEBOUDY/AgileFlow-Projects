@@ -13,6 +13,7 @@ interface ProjectTabsProps {
   onDeleteTask: (id: string) => void;
   onDeleteFile: (id: string) => void;
   onRefreshFiles?: () => void;
+  canManageTasks?: boolean;
 }
 
 export default function ProjectTabs({
@@ -24,6 +25,7 @@ export default function ProjectTabs({
   onDeleteTask,
   onDeleteFile,
   onRefreshFiles,
+  canManageTasks = false,
 }: ProjectTabsProps) {
   // 🛠️ الفلترة الحقيقية والذكية للمستخدمين لعرضهم في الـ Team Tab
   const teamMemberIds =
@@ -191,6 +193,7 @@ export default function ProjectTabs({
           users={users}
           onEditTask={onEditTask}
           onDeleteTask={onDeleteTask}
+          canManageTasks={canManageTasks}
         />
       </TabsContent>
 

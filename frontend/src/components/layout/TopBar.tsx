@@ -2,7 +2,7 @@ import { Search, Bell, Sun, Moon, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {  ProfileDropdown } from "../ProfileDropdown";
+import { ProfileDropdown } from "../ProfileDropdown";
 
 export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
   const { theme, setTheme } = useTheme();
@@ -15,16 +15,8 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("access_token");
     navigate("/login");
-  };
-
-  // Mock user data - replace with actual user data from your state management
-  const currentUser = {
-    name: "Mahmoud",
-    email: "mahmoud@agileflow.com",
-    role: "Admin",
-    phone: "+1 (555) 123-4567",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
   };
 
   return (
@@ -73,7 +65,7 @@ export function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive border border-background"></span>
           </button>
 
-          <ProfileDropdown  user={currentUser} onLogout={handleLogout} />
+          <ProfileDropdown onLogout={handleLogout} />
         </div>
       </div>
     </header>

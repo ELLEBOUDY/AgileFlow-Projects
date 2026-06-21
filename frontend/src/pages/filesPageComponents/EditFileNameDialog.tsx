@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,12 +20,6 @@ interface EditFileNameDialogProps {
 export function EditFileNameDialog({ isOpen, onClose, onConfirm, currentName }: EditFileNameDialogProps) {
   const [newName, setNewName] = useState(currentName);
 
-  useEffect(() => {
-    if (isOpen) {
-      setNewName(currentName);
-    }
-  }, [isOpen, currentName]);
-
   const handleConfirm = () => {
     if (newName.trim() && newName.trim() !== currentName) {
       onConfirm(newName.trim());
@@ -34,7 +28,7 @@ export function EditFileNameDialog({ isOpen, onClose, onConfirm, currentName }: 
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog key={`edit-${currentName}`} open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Rename File</DialogTitle>

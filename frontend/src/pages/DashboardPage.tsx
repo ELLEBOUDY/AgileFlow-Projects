@@ -252,13 +252,13 @@ export function DashboardPage() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {/* Teams */}
-          <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6">
+          <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 flex flex-col h-80">
             <div className="flex items-center gap-2 mb-4">
               <Users className="w-5 h-5 text-green-500" />
               <h4 className="font-semibold">Teams</h4>
             </div>
-            <div className="space-y-4">
-              {users.slice(0, 4).map((user: any) => (
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+              {users.map((user: any) => (
                 <div key={user.id} className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold uppercase shrink-0">
                     {getUserInitials(user)}
@@ -277,13 +277,13 @@ export function DashboardPage() {
           </div>
 
           {/* Project Managers */}
-          <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6">
+          <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 flex flex-col h-80">
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck className="w-5 h-5 text-blue-500" />
               <h4 className="font-semibold">Project Managers</h4>
             </div>
-            <div className="space-y-4">
-              {managers.slice(0, 4).map((user: any) => (
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+              {managers.map((user: any) => (
                 <div key={user.id} className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                     <UserCircle className="w-5 h-5" />

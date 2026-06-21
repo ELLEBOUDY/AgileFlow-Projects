@@ -1,12 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { resetPasswordSchema, type ResetPasswordFormType } from "@/validation/index";
+import { userAPI } from "@/services/api";
 
 export function ResetPasswordPage() {
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -16,11 +19,35 @@ export function ResetPasswordPage() {
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  const onSubmit = async (_data: ResetPasswordFormType) => {
-    // Simulate resetting password
-    console.log("Resetting password...");
-    // Ideally you'd show a success message or toast before redirecting
-    navigate("/login");
+  const onSubmit = async (data: ResetPasswordFormType) => {
+    try {
+      setError(null);
+      const email = sessionStorage.getItem("reset_email");
+      const code = sessionStorage.getItem("reset_code");
+
+      if (!email || !code) {
+        setError("Missing reset data. Start over from Forgot Password.");
+        return;
+      }
+
+      await userAPI.confirmPasswordReset({
+        email,
+        code,
+        new_password: data.password,
+        confirm_password: data.confirmPassword,
+      });
+
+      sessionStorage.removeItem("reset_email");
+      sessionStorage.removeItem("reset_code");
+      navigate("/login");
+    } catch (err: any) {
+      setError(
+        err.response?.data?.code?.[0] ||
+        err.response?.data?.confirm_password?.[0] ||
+        err.response?.data?.detail ||
+        "Failed to reset password."
+      );
+    }
   };
 
   return (
@@ -31,6 +58,12 @@ export function ResetPasswordPage() {
           Enter your new password below
         </p>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-2 text-left">

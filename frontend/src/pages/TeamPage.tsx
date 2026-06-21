@@ -67,7 +67,7 @@ export function TeamPage() {
     defaultValues: {
       name: "",
       email: "",
-      role: "Member",
+      role: "member", // متوافق مع الـ Schema بحروف صغيرة
       phone: "",
     },
   });
@@ -82,6 +82,20 @@ export function TeamPage() {
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const roleOptions = ["all", "admin", "manager", "member"];
+
+  const formatRole = (value: string) => {
+    if (value === "all") return "All Roles";
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  };
+
+  // دالة تحويل الحروف الصغيرة إلى الكبيرة المطابقة للـ IUser interface
+  const mapRoleToInterface = (role: string): "Admin" | "Manager" | "Member" => {
+    const lower = role.toLowerCase();
+    if (lower === "admin") return "Admin";
+    if (lower === "manager") return "Manager";
+    return "Member";
+  };
 
   const createMember = useMutation({
     mutationFn: async (newUser: IUser) => {
@@ -102,7 +116,11 @@ export function TeamPage() {
     if (existingUser) {
       setValue("email", existingUser.email);
       setValue("name", existingUser.name);
-      setValue("role", existingUser.role);
+      // نحول القيمة القادمة من الـ API (كبيرة) إلى صغيرة لتناسب الـ form والـ schema
+      setValue(
+        "role",
+        (existingUser.role || "member").toLowerCase() as MemberFormType["role"],
+      );
       setValue("phone", existingUser.phone || "");
     } else {
       setValue("email", selectedEmail);
@@ -110,12 +128,20 @@ export function TeamPage() {
   };
 
   const onSubmit = (data: MemberFormType) => {
-    createMember.mutate(data);
+    // 💡 السحر هنا: نقوم بتشكيل الـ Object ليتطابق مع الـ IUser تماماً قبل إرساله
+    const payload: IUser = {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      role: mapRoleToInterface(data.role), // تحويل الحرف لكبير هنا فقط
+    };
+    createMember.mutate(payload);
   };
 
   const filteredUsers = useMemo(() => {
     return users.filter((user: IUser) => {
-      if (roleFilter !== "all" && user.role !== roleFilter) return false;
+      const userRole = (user.role || "").toLowerCase();
+      if (roleFilter !== "all" && userRole !== roleFilter) return false;
       if (search.trim() !== "") {
         const text = search.toLowerCase();
         return (
@@ -157,14 +183,14 @@ export function TeamPage() {
           />
         </div>
         <div className="flex gap-2 flex-wrap">
-          {["all", "Admin", "Manager", "Developer"].map((role) => (
+          {roleOptions.map((role) => (
             <Badge
               key={role}
               variant={roleFilter === role ? "secondary" : "outline"}
               onClick={() => setRoleFilter(role)}
               className="cursor-pointer"
             >
-              {role === "all" ? "All Roles" : role}
+              {formatRole(role)}
             </Badge>
           ))}
         </div>
@@ -218,18 +244,14 @@ export function TeamPage() {
                         <div className="absolute right-0 top-10 w-36 bg-popover border rounded-md shadow-lg z-20 py-1 animate-in fade-in zoom-in-95 duration-100">
                           <button
                             className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-muted transition-colors font-medium text-left"
-                            onClick={() => {
-                              setOpenMenuId(null);
-                            }}
+                            onClick={() => setOpenMenuId(null)}
                           >
                             <Edit3 className="w-3.5 h-3.5" /> Edit Member
                           </button>
                           <div className="h-px bg-border my-1" />
                           <button
                             className="flex items-center gap-2 w-full px-3 py-1.5 text-xs hover:bg-destructive/10 text-destructive transition-colors font-medium text-left"
-                            onClick={() => {
-                              setOpenMenuId(null);
-                            }}
+                            onClick={() => setOpenMenuId(null)}
                           >
                             <Trash2 className="w-3.5 h-3.5" /> Delete Member
                           </button>
@@ -244,7 +266,7 @@ export function TeamPage() {
                     {user.name}
                   </h3>
                   <p className="text-sm text-primary font-medium">
-                    {user.role}
+                    {formatRole(user.role || "")}
                   </p>
                 </div>
 
@@ -258,23 +280,6 @@ export function TeamPage() {
                     <span>{user.phone || "+1 (555) 000-0000"}</span>
                   </div>
                 </div>
-
-                {/* <div className="mt-6 flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="w-full text-xs"
-                    size="sm"
-                  >
-                    Message
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full text-xs"
-                    size="sm"
-                  >
-                    Profile
-                  </Button>
-                </div> */}
               </div>
             </div>
           ))}
@@ -330,10 +335,10 @@ export function TeamPage() {
                 {...register("role")}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <option value="Admin">Admin</option>
-                <option value="Manager">Manager</option>
-                <option value="Developer">Developer</option>
-                <option value="Designer">Designer</option>
+                {/* الحروف هنا صغيرة لتطابق الـ Zod Schema تماماً لكي لا يفشل الـ validation */}
+                <option value="admin">Admin</option>
+                <option value="manager">Manager</option>
+                <option value="member">Member</option>
               </select>
             </div>
             <div className="space-y-2">

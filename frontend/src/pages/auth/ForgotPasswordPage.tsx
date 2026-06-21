@@ -1,12 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { forgotPasswordSchema, type ForgotPasswordFormType } from "@/validation/index";
+import { userAPI } from "@/services/api";
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
@@ -16,11 +19,15 @@ export function ForgotPasswordPage() {
     resolver: zodResolver(forgotPasswordSchema),
   });
 
-  const onSubmit = async (_data: ForgotPasswordFormType) => {
-    // Simulate sending email
-    console.log("Sending verification code to:", _data.email);
-    // Redirect to verify code page, you could pass the email via state
-    navigate("/verify-code", { state: { email: _data.email } });
+  const onSubmit = async (data: ForgotPasswordFormType) => {
+    try {
+      setError(null);
+      await userAPI.requestPasswordReset({ email: data.email });
+      sessionStorage.setItem("reset_email", data.email);
+      navigate("/verify-code", { state: { email: data.email } });
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Failed to send reset code.");
+    }
   };
 
   return (
@@ -31,6 +38,12 @@ export function ForgotPasswordPage() {
           Enter your email address to receive a verification code
         </p>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-2 text-left">

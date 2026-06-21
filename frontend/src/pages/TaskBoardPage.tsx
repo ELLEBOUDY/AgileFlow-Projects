@@ -24,6 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import api from "../services/api";
+import { useUser } from "../hooks/useUser";
 import { taskSchema, type TaskFormType } from "../validation";
 import type { ITask } from "../interfaces";
 
@@ -78,6 +79,8 @@ function TaskCard({
   onToggleDone,
   isOpen,
   onToggle,
+  canDrag,
+  canManage,
 }: {
   task: any;
   color: string;
@@ -86,12 +89,14 @@ function TaskCard({
   onToggleDone?: (id: string) => void;
   isOpen?: boolean;
   onToggle?: () => void;
+  canDrag: boolean;
+  canManage: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: task.id.toString(),
       data: { task },
-      disabled: isOpen, // Disable dragging when menu is open
+      disabled: !canDrag || isOpen,
     });
 
   const style = {
@@ -111,9 +116,9 @@ function TaskCard({
         <div
           {...listeners}
           {...attributes}
-          className="cursor-grab active:cursor-grabbing flex-1 flex items-center gap-2"
+          className={`${canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default"} flex-1 flex items-center gap-2`}
         >
-          {onToggleDone && (
+          {canManage && onToggleDone && (
             <div
               className="text-muted-foreground hover:text-primary transition-colors cursor-pointer"
               onClick={(e) => {
@@ -135,7 +140,7 @@ function TaskCard({
             T-{task.id}
           </Badge>
         </div>
-        {onToggle && (
+        {canManage && onToggle && (
           <div className="relative">
             <Button
               variant="ghost"
@@ -190,7 +195,7 @@ function TaskCard({
       <div
         {...listeners}
         {...attributes}
-        className="cursor-grab active:cursor-grabbing"
+        className={canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default"}
       >
         <p
           className={`text-sm font-medium leading-snug mb-4 transition-all ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}
@@ -230,6 +235,9 @@ function Column({
   onToggleDone,
   openMenuId,
   setOpenMenuId,
+  canCreateTasks,
+  canDragTasks,
+  canManageTasks,
 }: {
   column: any;
   tasks: any[];
@@ -239,6 +247,9 @@ function Column({
   onToggleDone: (id: string) => void;
   openMenuId: string | null;
   setOpenMenuId: (id: string | null) => void;
+  canCreateTasks: boolean;
+  canDragTasks: boolean;
+  canManageTasks: boolean;
 }) {
   const { isOver, setNodeRef } = useDroppable({
     id: column.id,
@@ -269,14 +280,16 @@ function Column({
             {tasks.length}
           </Badge>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          onClick={() => setIsAdding(true)}
-        >
-          <Plus className="w-4 h-4" />
-        </Button>
+        {canCreateTasks && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={() => setIsAdding(true)}
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
@@ -323,6 +336,8 @@ function Column({
                 openMenuId === task.id.toString() ? null : task.id.toString(),
               )
             }
+            canDrag={canDragTasks}
+            canManage={canManageTasks}
           />
         ))}
         {tasks.length === 0 && !isAdding && (
@@ -337,6 +352,8 @@ function Column({
 
 export function TaskBoardPage() {
   const queryClient = useQueryClient();
+  const { user } = useUser();
+  const isAdmin = user?.role === "admin";
   const [activeTask, setActiveTask] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -355,7 +372,15 @@ export function TaskBoardPage() {
       title: "",
       description: "",
       status: "todo",
-      assigneeId: "1",
+      assigneeId: "",
+    },
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const { data } = await api.get("users/");
+      return data;
     },
   });
 
@@ -431,19 +456,29 @@ export function TaskBoardPage() {
   });
 
   const handleInlineAdd = (status: string, title: string) => {
+    if (!isAdmin) return;
+
     createTask.mutate({
       title,
       status: status as TaskFormType["status"],
       description: "Added quickly from the board.",
-      assigneeId: (Math.floor(Math.random() * 5) + 1).toString(),
+      assigneeId:
+        users.find((u: any) => {
+          const role = String(u.role || "").toLowerCase();
+          return role === "member";
+        })?.id?.toString() || "1",
     });
   };
 
   const onSubmit = (data: TaskFormType) => {
+    if (!isAdmin) return;
+
     createTask.mutate(data);
   };
 
   const handleEditTask = (task: ITask) => {
+    if (!isAdmin) return;
+
     setEditingTask(task);
     setValue("title", task.title);
     setValue("description", task.description);
@@ -465,18 +500,27 @@ export function TaskBoardPage() {
         title: "",
         description: "",
         status: "todo",
-        assigneeId: "1",
+        assigneeId: "",
       });
     }
   }, [isModalOpen, editingTask, reset]);
 
+  const memberUsers = users.filter((u: any) => {
+    const role = String(u.role || "").toLowerCase();
+    return role === "member";
+  });
+
   const handleDragStart = (event: any) => {
+    if (!isAdmin) return;
+
     const { active } = event;
     const task = tasks.find((t: any) => t.id.toString() === active.id);
     setActiveTask(task);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    if (!isAdmin) return;
+
     const { active, over } = event;
     setActiveTask(null);
 
@@ -515,13 +559,15 @@ export function TaskBoardPage() {
               +2
             </div>
           </div>
-          <Button
-            className="flex items-center gap-2"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <Plus className="w-4 h-4" />
-            Add Task
-          </Button>
+          {isAdmin && (
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <Plus className="w-4 h-4" />
+              Add Task
+            </Button>
+          )}
         </div>
       </div>
 
@@ -547,9 +593,13 @@ export function TaskBoardPage() {
                     column={column}
                     tasks={columnTasks}
                     onInlineAdd={handleInlineAdd}
-                    onDelete={(id) => deleteTaskMutation.mutate(id)}
+                    onDelete={(id) => {
+                      if (isAdmin) deleteTaskMutation.mutate(id);
+                    }}
                     onEdit={handleEditTask}
                     onToggleDone={(id) => {
+                      if (!isAdmin) return;
+
                       const task = tasks.find(
                         (t: any) => t.id.toString() === id.toString(),
                       );
@@ -564,6 +614,9 @@ export function TaskBoardPage() {
                     }}
                     openMenuId={openMenuId}
                     setOpenMenuId={setOpenMenuId}
+                    canCreateTasks={isAdmin}
+                    canDragTasks={isAdmin}
+                    canManageTasks={isAdmin}
                   />
                 );
               })}
@@ -576,6 +629,8 @@ export function TaskBoardPage() {
                   color={
                     COLUMNS.find((c) => c.id === activeTask.status)?.color || ""
                   }
+                  canDrag={isAdmin}
+                  canManage={false}
                 />
               ) : null}
             </DragOverlay>
@@ -657,10 +712,18 @@ export function TaskBoardPage() {
                   errors.assigneeId ? "border-destructive" : "border-input"
                 } bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
                 {...register("assigneeId")}
+                disabled={memberUsers.length === 0}
               >
-                <option value="1">Sarah Jenkins</option>
-                <option value="2">Mike Thompson</option>
-                <option value="3">David Wright</option>
+                <option value="">
+                  {memberUsers.length === 0
+                    ? "No members available"
+                    : "Select a member"}
+                </option>
+                {memberUsers.map((member: any) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name || member.username || member.email}
+                  </option>
+                ))}
               </select>
               {errors.assigneeId && (
                 <p className="text-xs text-destructive mt-1">

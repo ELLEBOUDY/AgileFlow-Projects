@@ -7,6 +7,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import api from "@/services/api";
+import { useUser } from "@/hooks/useUser";
 
 import type { IProject } from "@/interfaces";
 import type { ProjectFormType } from "@/validation";
@@ -18,6 +19,8 @@ import DeleteProjectModal from "@/components/projects/DeleteProjectModal";
 
 export function ProjectsPage() {
   const queryClient = useQueryClient();
+  const { user } = useUser();
+  const isAdmin = user?.role === "admin";
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -96,6 +99,8 @@ export function ProjectsPage() {
   }, [projects, search, statusFilter]);
 
   const handleSubmitProject = (data: ProjectFormType) => {
+    if (!isAdmin) return;
+
     createProjectMutation.mutate(data);
   };
 
@@ -134,16 +139,18 @@ export function ProjectsPage() {
           </p>
         </div>
 
-        <Button
-          className="flex items-center gap-2"
-          onClick={() => {
-            setEditingProject(null);
-            setIsModalOpen(true);
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          New Project
-        </Button>
+        {isAdmin && (
+          <Button
+            className="flex items-center gap-2"
+            onClick={() => {
+              setEditingProject(null);
+              setIsModalOpen(true);
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            New Project
+          </Button>
+        )}
       </div>
 
       <ProjectsFilters
