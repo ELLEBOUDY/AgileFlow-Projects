@@ -8,6 +8,8 @@ import {
   Paperclip,
   UserPlus,
   Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import api from "@/services/api";
 import { useUser } from "@/hooks/useUser";
@@ -53,6 +55,9 @@ export default function ProjectDetailsPage() {
   const { user } = useUser();
   const isAdmin = user?.role === "admin";
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   // States الخاصة بالتاسكات
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -64,17 +69,14 @@ export default function ProjectDetailsPage() {
     assigneeId: "",
   });
 
-  // ➕ States الخاصة بإضافة الأعضاء الجدد المشروع
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
 
-  // تأكيد الحذف
   const [itemToDelete, setItemToDelete] = useState<{
     id: string;
     type: "task" | "file";
   } | null>(null);
 
-  // 1. جلب تفاصيل المشروع
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ["project", id],
     queryFn: async () => {
@@ -84,17 +86,17 @@ export default function ProjectDetailsPage() {
     enabled: !!id,
   });
 
-  // 2. جلب تاسكات المشروع
-  const { data: tasks = [], isLoading: tasksLoading } = useQuery({
-    queryKey: ["projectTasks", id],
+  const { data: tasksData, isLoading: tasksLoading } = useQuery({
+    queryKey: ["projectTasks", id, currentPage],
     queryFn: async () => {
-      const { data } = await api.get(`projects/tasks/?project=${id}`);
+      const { data } = await api.get(
+        `projects/tasks/?project=${id}&page=${currentPage}`,
+      );
       return data;
     },
     enabled: !!id,
   });
 
-  // 3. جلب مستخدمين النظام
   const { data: users = [] } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
@@ -103,7 +105,6 @@ export default function ProjectDetailsPage() {
     },
   });
 
-  // 4. جلب ملفات المشروع الداينامك
   const { data: files = [] } = useQuery({
     queryKey: ["files", id],
     queryFn: async () => {
@@ -113,7 +114,15 @@ export default function ProjectDetailsPage() {
     enabled: !!id,
   });
 
-  // 5. إضافة تاسك حقيقي مربوط بديجانجو
+  const taskList: any[] = Array.isArray(tasksData)
+    ? tasksData
+    : tasksData?.results || [];
+
+  const totalTasksCount = tasksData?.count || taskList.length || 0;
+  const totalPages = Math.ceil(totalTasksCount / itemsPerPage) || 1;
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+  const indexOfLastItem = indexOfFirstItem + taskList.length;
+
   const addTaskMutation = useMutation({
     mutationFn: async (formData: any) => {
       if (!isAdmin) return;
@@ -139,7 +148,6 @@ export default function ProjectDetailsPage() {
     },
   });
 
-  // 6. تعديل تاسك حقيقي في الداتابيز
   const editTaskMutation = useMutation({
     mutationFn: async ({ id: taskId, data }: { id: string; data: any }) => {
       if (!isAdmin) return;
@@ -169,7 +177,6 @@ export default function ProjectDetailsPage() {
     },
   });
 
-  // 7. حذف تاسك نهائياً
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: string) => {
       if (!isAdmin) return;
@@ -181,7 +188,6 @@ export default function ProjectDetailsPage() {
     },
   });
 
-  // 8. حذف ملف نهائياً
   const deleteFileMutation = useMutation({
     mutationFn: async (fileId: string) => {
       return await api.delete(`projects/files/${fileId}/`);
@@ -191,11 +197,9 @@ export default function ProjectDetailsPage() {
     },
   });
 
-  // ➕ 9. Mutation مخصصة لإضافة عضو جديد لفريق المشروع في ديجانجو
   const addMemberMutation = useMutation({
     mutationFn: async (userId: number) => {
       const updatedMembers = [...(project.team_members || []), userId];
-      // مأمنة لاستخدام الـ project.team أو كـ fallback معتمد على المسار الفعلي
       const teamId = project.team?.id || project.team;
       return await api.patch(`projects/teams/${teamId}/`, {
         members: updatedMembers,
@@ -247,17 +251,16 @@ export default function ProjectDetailsPage() {
 
   const canAssignTask = isAdmin;
 
-  // حساب الإحصائيات للشارتات
-  const todoCount = tasks.filter(
+  const todoCount = taskList.filter(
     (t: any) => t.status?.toLowerCase() === "todo",
   ).length;
-  const inProgressCount = tasks.filter(
+  const inProgressCount = taskList.filter(
     (t: any) => t.status?.toLowerCase() === "in_progress",
   ).length;
-  const reviewCount = tasks.filter(
+  const reviewCount = taskList.filter(
     (t: any) => t.status?.toLowerCase() === "review",
   ).length;
-  const doneCount = tasks.filter(
+  const doneCount = taskList.filter(
     (t: any) => t.status?.toLowerCase() === "done",
   ).length;
 
@@ -366,7 +369,7 @@ export default function ProjectDetailsPage() {
             <p className="text-sm text-muted-foreground font-medium">
               Total Tasks
             </p>
-            <p className="text-2xl font-bold mt-0.5">{tasks.length}</p>
+            <p className="text-2xl font-bold mt-0.5">{totalTasksCount}</p>
           </div>
         </div>
 
@@ -397,14 +400,14 @@ export default function ProjectDetailsPage() {
         </div>
       </div>
 
-      {/* الشارتات والتحليلات */}
+      {/* الشارتات */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="border bg-card rounded-xl p-5 shadow-sm">
           <h3 className="text-sm font-semibold mb-4 text-card-foreground">
             Tasks State Distribution
           </h3>
           <div className="h-[260px] flex items-center justify-center">
-            {tasks.length === 0 ? (
+            {taskList.length === 0 ? (
               <p className="text-xs text-muted-foreground">
                 No workflow data available for visualization.
               </p>
@@ -452,7 +455,7 @@ export default function ProjectDetailsPage() {
             Task Workload Analytics
           </h3>
           <div className="h-[260px]">
-            {tasks.length === 0 ? (
+            {taskList.length === 0 ? (
               <p className="text-xs text-muted-foreground flex h-full items-center justify-center">
                 No analytic units recorded.
               </p>
@@ -500,8 +503,8 @@ export default function ProjectDetailsPage() {
       </div>
 
       {/* الـ Hub الأساسي والتّبويبات */}
-      <div className="border bg-card rounded-xl p-6 shadow-sm">
-        <div className="flex justify-between items-center mb-4">
+      <div className="border bg-card rounded-xl shadow-sm overflow-hidden">
+        <div className="p-6 pb-4 flex justify-between items-center">
           <h2 className="text-xl font-bold tracking-tight">Workspace Hub</h2>
           <div className="flex gap-2 flex-wrap">
             <Button
@@ -534,24 +537,75 @@ export default function ProjectDetailsPage() {
           </div>
         </div>
 
-        {/* 🚀 تمرير الـ Props الصح لـ ProjectTabs بما فيها دالة تحديث قائمة الفايلات الفورية */}
-        <ProjectTabs
-          project={project}
-          tasks={tasks}
-          users={users}
-          files={files}
-          onEditTask={handleEditClick}
-          onDeleteTask={(taskId: string) =>
-            isAdmin && setItemToDelete({ id: taskId, type: "task" })
-          }
-          onDeleteFile={(fileId: string) =>
-            setItemToDelete({ id: fileId, type: "file" })
-          }
-          onRefreshFiles={() =>
-            queryClient.invalidateQueries({ queryKey: ["files", id] })
-          }
-          canManageTasks={isAdmin}
-        />
+        {/* الـ Tabs الرئيسية */}
+        <div className="px-6">
+          <ProjectTabs
+            project={project}
+            tasks={taskList} // 👈 نمرر الـ taskList الآمنة المفروزة 5 بـ 5
+            users={users}
+            files={files}
+            onEditTask={handleEditClick}
+            onDeleteTask={(taskId: string) =>
+              isAdmin && setItemToDelete({ id: taskId, type: "task" })
+            }
+            onDeleteFile={(fileId: string) =>
+              setItemToDelete({ id: fileId, type: "file" })
+            }
+            onRefreshFiles={() =>
+              queryClient.invalidateQueries({ queryKey: ["files", id] })
+            }
+            canManageTasks={isAdmin}
+          />
+        </div>
+
+        {/* 🛠️ إضافة شريط الأسهم والترقيم (نفس تصميم الداش بورد تماماً وبطريقة 5 بـ 5) */}
+        <div className="p-4 flex items-center justify-between border-t gap-2 flex-wrap sm:flex-nowrap bg-muted/10">
+          <p className="text-xs text-muted-foreground px-2">
+            Showing {totalTasksCount ? indexOfFirstItem + 1 : 0} to{" "}
+            {indexOfLastItem} of {totalTasksCount} tasks
+          </p>
+
+          <div className="flex items-center gap-1.5 ml-auto">
+            {/* سهم لورا */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            {/* أرقام الصفحات */}
+            {Array.from({ length: totalPages }, (_, index) => {
+              const pageNumber = index + 1;
+              return (
+                <Button
+                  key={pageNumber}
+                  variant={currentPage === pageNumber ? "default" : "outline"}
+                  className="h-8 w-8 text-xs"
+                  onClick={() => setCurrentPage(pageNumber)}
+                >
+                  {pageNumber}
+                </Button>
+              );
+            })}
+
+            {/* سهم لقدام */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Add Member Dialog */}

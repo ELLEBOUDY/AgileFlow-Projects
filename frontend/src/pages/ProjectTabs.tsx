@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import OverviewTab from "./tabs/OverviewTab";
 import TasksTab from "./tabs/TasksTab";
 import TeamTab from "./tabs/TeamTab";
@@ -18,7 +21,7 @@ interface ProjectTabsProps {
 
 export default function ProjectTabs({
   project,
-  tasks,
+  tasks = [],
   users,
   files,
   onEditTask,
@@ -27,7 +30,11 @@ export default function ProjectTabs({
   onRefreshFiles,
   canManageTasks = false,
 }: ProjectTabsProps) {
-  // 🛠️ الفلترة الحقيقية والذكية للمستخدمين لعرضهم في الـ Team Tab
+  //  الـ States الخاصة بالـ Pagination للتسكات (5 بـ 5)
+  const [currentPage, setCurrentPage] = useState(1);
+  const tasksPerPage = 5;
+
+  //  الفلترة الحقيقية والذكية للمستخدمين لعرضهم في الـ Team Tab
   const teamMemberIds =
     project?.team_members?.map((id: any) => String(id)) || [];
   const assignedUserIds = tasks
@@ -43,7 +50,11 @@ export default function ProjectTabs({
       allProjectUserIds.includes(String(u.id)) || u.id === project?.manager_id,
   );
 
-  // 📤 الدالة المؤمنة بالكامل لجلب الـ User ID حتى لو مش موجود في الـ LocalStorage
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = tasks.slice(indexOfFirstTask, indexOfLastTask);
+  const totalPages = Math.ceil(tasks.length / tasksPerPage) || 1;
+
   const handleFileUpload = async (formData: FormData) => {
     try {
       const token =
@@ -76,14 +87,12 @@ export default function ProjectTabs({
         return;
       }
 
-      // 🔐 محاولة جلب الـ User ID بكافة الطرق الممكنة:
       let currentUserId =
         localStorage.getItem("user_id") ||
         localStorage.getItem("userId") ||
         project?.manager_id ||
         project?.manager;
 
-      // 🛠️ خطة بديلة: لو الـ LocalStorage فاضي، بنفك تشفير الـ Token ونطلع منه الـ user_id
       if (!currentUserId && token) {
         try {
           const base64Url = token.split(".")[1];
@@ -95,7 +104,6 @@ export default function ProjectTabs({
               .join(""),
           );
           const decoded = JSON.parse(jsonPayload);
-          // في ديجانجو (SimpleJWT) الـ ID دايماً بيبقى جواه مفتاح اسمه 'user_id'
           currentUserId = decoded.user_id || decoded.id;
         } catch (e) {
           console.error("Failed to decode JWT Token:", e);
@@ -106,7 +114,6 @@ export default function ProjectTabs({
       if (currentUserId) {
         djangoFormData.append("uploaded_by", String(currentUserId));
       } else {
-        // خط دفاع أخير: لو السيرفر بيقبل الـ User تلقائي من الـ Token (request.user)، جرب نبعت من غير الحقل
         console.warn(
           "uploaded_by not found locally, trying to let Django handle it via token.",
         );
@@ -186,15 +193,78 @@ export default function ProjectTabs({
         />
       </TabsContent>
 
-      {/* Tasks Tab */}
-      <TabsContent value="tasks">
+      {/* Tasks Tab -> تم تمرير الـ currentTasks المقصوصة (5 فقط) */}
+      <TabsContent value="tasks" className="space-y-4">
         <TasksTab
-          tasks={tasks}
+          tasks={currentTasks}
           users={users}
           onEditTask={onEditTask}
           onDeleteTask={onDeleteTask}
           canManageTasks={canManageTasks}
         />
+
+        {/* شريط الـ Pagination الخاص بالتنقل بين صفحات التسكات الـ 5 */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-2 px-1 text-xs border-t border-slate-100 dark:border-slate-800/60">
+            <p className="text-muted-foreground font-medium">
+              Showing{" "}
+              <span className="text-slate-700 dark:text-slate-200 font-bold">
+                {indexOfFirstTask + 1}
+              </span>{" "}
+              to{" "}
+              <span className="text-slate-700 dark:text-slate-200 font-bold">
+                {indexOfLastTask > tasks.length
+                  ? tasks.length
+                  : indexOfLastTask}
+              </span>{" "}
+              of{" "}
+              <span className="text-slate-700 dark:text-slate-200 font-bold">
+                {tasks.length}
+              </span>{" "}
+              entries
+            </p>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="w-7 h-7 rounded-md disabled:opacity-30"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (pageNumber) => (
+                  <Button
+                    key={pageNumber}
+                    variant={currentPage === pageNumber ? "default" : "outline"}
+                    className={`w-7 h-7 text-xs rounded-md p-0 font-bold transition-all ${
+                      currentPage === pageNumber
+                        ? "bg-primary text-white shadow-md shadow-primary/20"
+                        : "text-muted-foreground hover:text-slate-700 dark:hover:text-slate-100"
+                    }`}
+                    onClick={() => setCurrentPage(pageNumber)}
+                  >
+                    {pageNumber}
+                  </Button>
+                ),
+              )}
+
+              <Button
+                variant="outline"
+                size="icon"
+                className="w-7 h-7 rounded-md disabled:opacity-30"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </TabsContent>
 
       {/* Team Tab */}

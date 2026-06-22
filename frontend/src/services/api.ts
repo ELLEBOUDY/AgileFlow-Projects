@@ -57,9 +57,12 @@ export const userAPI = {
   getCurrentUser: () => api.get("users/me/"),
   updateUser: (data: any) => api.patch("users/me/", data),
   changePassword: (data: any) => api.post("users/change-password/", data),
-  requestPasswordReset: (data: any) => api.post("users/password-reset/request/", data),
-  verifyPasswordReset: (data: any) => api.post("users/password-reset/verify/", data),
-  confirmPasswordReset: (data: any) => api.post("users/password-reset/confirm/", data),
+  requestPasswordReset: (data: any) =>
+    api.post("users/password-reset/request/", data),
+  verifyPasswordReset: (data: any) =>
+    api.post("users/password-reset/verify/", data),
+  confirmPasswordReset: (data: any) =>
+    api.post("users/password-reset/confirm/", data),
   register: (data: any) => api.post("users/register/", data),
   login: (data: any) => api.post("users/login/", data),
   refreshToken: (data: any) => api.post("users/token/refresh/", data),

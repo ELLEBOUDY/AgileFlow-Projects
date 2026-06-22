@@ -195,7 +195,9 @@ function TaskCard({
       <div
         {...listeners}
         {...attributes}
-        className={canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default"}
+        className={
+          canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default"
+        }
       >
         <p
           className={`text-sm font-medium leading-snug mb-4 transition-all ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}
@@ -217,7 +219,7 @@ function TaskCard({
 
           <img
             className="h-6 w-6 rounded-full bg-accent pointer-events-none"
-            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${task.assigneeId || task.id}`}
+            src={`https:api.dicebear.com/7.x/avataaars/svg?seed=${task.assigneeId || task.id}`}
             alt="Assignee"
           />
         </div>
@@ -359,7 +361,6 @@ export function TaskBoardPage() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<ITask | null>(null);
 
-  // React Hook Form setup with Zod validation
   const {
     register,
     handleSubmit,
@@ -387,8 +388,8 @@ export function TaskBoardPage() {
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ["tasks"],
     queryFn: async () => {
-      const { data } = await api.get("projects/tasks");
-      return data;
+      const { data } = await api.get("projects/tasks/?page_size=100");
+      return data.results || [];
     },
   });
 
@@ -463,10 +464,12 @@ export function TaskBoardPage() {
       status: status as TaskFormType["status"],
       description: "Added quickly from the board.",
       assigneeId:
-        users.find((u: any) => {
-          const role = String(u.role || "").toLowerCase();
-          return role === "member";
-        })?.id?.toString() || "1",
+        users
+          .find((u: any) => {
+            const role = String(u.role || "").toLowerCase();
+            return role === "member";
+          })
+          ?.id?.toString() || "1",
     });
   };
 
@@ -493,7 +496,6 @@ export function TaskBoardPage() {
     reset();
   };
 
-  // Reset form when modal opens for creating a new task
   useEffect(() => {
     if (isModalOpen && !editingTask) {
       reset({
@@ -551,7 +553,7 @@ export function TaskBoardPage() {
               <img
                 key={i}
                 className="inline-block h-8 w-8 rounded-full ring-2 ring-background bg-accent z-0"
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`}
+                src={`https:api.dicebear.com/7.x/avataaars/svg?seed=${i}`}
                 alt=""
               />
             ))}

@@ -6,7 +6,7 @@ from .serializers import (TeamSerializer, ProjectSerializer, TaskSerializer, Com
                           ,FileSerializer, NotificationSerializer)
 from .permissions import IsTeamMemberOrManagerOrAdmin
 from rest_framework.parsers import MultiPartParser, FormParser
-
+from rest_framework.pagination import PageNumberPagination
 class IsTeamManagerOrAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # anyone can perform(GET)
@@ -71,12 +71,19 @@ class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 # ------------------ 3. TASKS VIEWS ------------------
+# 1. كلاس مخصص لتحديد حجم الصفحة (5 عناصر) وتنسيق شكل الـ Response
+class TasksDashboardPagination(PageNumberPagination):
+    page_size = 5
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+# 2. تعديل الـ View لتطبيق الـ Pagination
 class TaskListCreateView(generics.ListCreateAPIView):
-    queryset = Task.objects.all()
+    queryset = Task.objects.all().order_by('-id') # ترتيب تنازلي لرؤية أحدث التاسكات أولاً
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = TasksDashboardPagination # 👈 تفعيل الباجينيرشن الحقيقي هنا
 
-    # only admin can add task
     def perform_create(self, serializer):
         if self.request.user.role != 'admin':
             raise PermissionDenied("Only Admins are allowed to create tasks.")
@@ -84,7 +91,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
         
     def get_queryset(self):
         user = self.request.user
-        queryset = Task.objects.all()
+        queryset = Task.objects.all().order_by('-id')
         
         if user.role != 'admin':
             queryset = Task.objects.filter(project__team__manager=user) | Task.objects.filter(project__team__members=user)
@@ -93,7 +100,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
         if project_id is not None:
             queryset = queryset.filter(project_id=project_id)
             
-        return queryset.distinct()
+        return queryset.distinct().order_by('-id')
 
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
