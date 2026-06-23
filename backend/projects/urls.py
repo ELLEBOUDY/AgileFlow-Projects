@@ -4,7 +4,7 @@ from .views import (
     ProjectListCreateView, ProjectDetailView,
     TaskListCreateView, TaskDetailView,
     CommentListCreateView, CommentDetailView,
-    FileListCreateView, NotificationListCreateView
+    FileListCreateView, NotificationListCreateView,NotificationUpdateView
 )
 
 urlpatterns = [
@@ -26,5 +26,6 @@ urlpatterns = [
 
     # 5. (Files & Notifications)
     path('files/', FileListCreateView.as_view(), name='file-list-create'),
-    path('notifications/', NotificationListCreateView.as_view(), name='notification-list-create'),
+    path('notifications/', NotificationListCreateView.as_view(), name='notification-list'),
+    path('notifications/<int:pk>/', NotificationUpdateView.as_view(), name='notification-update'),
 ]
