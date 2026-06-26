@@ -20,10 +20,16 @@ export type LoginFormType = z.infer<typeof loginSchema>;
 // 2. Register Schema
 // ==========================================
 export const registerSchema = z.object({
-  name: z
+  first_name: z
     .string()
-    .min(1, "Full name is required")
-    .min(2, "Name must be at least 2 characters"),
+    .min(1, "First name is required")
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name must not exceed 50 characters"),
+  last_name: z
+    .string()
+    .min(1, "Last name is required")
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name must not exceed 50 characters"),
   email: z
     .string()
     .min(1, "Email is required")
@@ -32,33 +38,76 @@ export const registerSchema = z.object({
     .string()
     .min(1, "Password is required")
     .min(6, "Password must be at least 6 characters"),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .regex(/^01[0125]\d{8}$/, "Must be a valid Egyptian number (e.g. 01012345678)"),
 });
 
 export type RegisterFormType = z.infer<typeof registerSchema>;
+// ==========================================
+// 3. Member Schemas
+// ==========================================
 
-// ==========================================
-// 3. Member Schema
-// ==========================================
+// Used when ADDING a new member — password required
 export const memberSchema = z.object({
-  name: z
+  first_name: z
     .string()
-    .min(1, "Full name is required")
-    .min(2, "Name must be at least 2 characters"),
-
+    .min(1, "First name is required")
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name must not exceed 50 characters"),
+  last_name: z
+    .string()
+    .min(1, "Last name is required")
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name must not exceed 50 characters"),
   email: z
     .string()
     .min(1, "Email is required")
     .email("Please enter a valid email address"),
-
   role: z.enum(["admin", "member", "manager"]),
-
   phone: z
     .string()
     .min(1, "Phone is required")
     .regex(/^01[0125]\d{8}$/, "Phone must be a valid Egyptian number"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
 });
 
 export type MemberFormType = z.infer<typeof memberSchema>;
+
+// Used when EDITING a member — password optional
+export const memberEditSchema = z.object({
+  first_name: z
+    .string()
+    .min(1, "First name is required")
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name must not exceed 50 characters"),
+  last_name: z
+    .string()
+    .min(1, "Last name is required")
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name must not exceed 50 characters"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  role: z.enum(["admin", "member", "manager"]),
+  phone: z
+    .string()
+    .min(1, "Phone is required")
+    .regex(/^01[0125]\d{8}$/, "Phone must be a valid Egyptian number"),
+  password: z
+    .string()
+    .optional()
+    .refine((val) => !val || val.length >= 6, {
+      message: "Password must be at least 6 characters",
+    }),
+});
+
+export type MemberEditFormType = z.infer<typeof memberEditSchema>;
 
 // ==========================================
 // 4. Task Schema
@@ -115,27 +164,38 @@ export type ResetPasswordFormType = z.infer<typeof resetPasswordSchema>;
 // ==========================================
 // 6. Project Schema
 // ==========================================
-export const projectSchema = z.object({
-  title: z
-    .string()
-    .min(1, "Project title is required")
-    .min(3, "Title must be at least 3 characters")
-    .max(100, "Title must not exceed 100 characters"),
-  description: z
-    .string()
-    .min(1, "Description is required")
-    .min(10, "Description must be at least 10 characters")
-    .max(500, "Description must not exceed 500 characters"),
-  status: z.enum(["in_progress", "planning", "completed"]),
-  progress: z
-    .number()
-    .min(0, "Progress must be at least 0")
-    .max(100, "Progress must not exceed 100"),
-  team: z.number().optional().nullable(),
-
-  // ➕ إضافة حقول التواريخ الجديدة هنا:
-  start_date: z.string().optional().nullable().or(z.literal("")),
-  end_date: z.string().optional().nullable().or(z.literal("")),
-});
+export const projectSchema = z
+  .object({
+    title: z
+      .string()
+      .min(1, "Project title is required")
+      .min(3, "Title must be at least 3 characters")
+      .max(100, "Title must not exceed 100 characters"),
+    description: z
+      .string()
+      .min(1, "Description is required")
+      .min(10, "Description must be at least 10 characters")
+      .max(500, "Description must not exceed 500 characters"),
+    status: z.enum(["in_progress", "planning", "completed"]),
+    progress: z
+      .number()
+      .min(0, "Progress must be at least 0")
+      .max(100, "Progress must not exceed 100"),
+    team: z.number().optional().nullable(),
+    start_date: z.string().min(1, "Start date is required"),
+    end_date: z.string().min(1, "End date is required"),
+  })
+  .refine(
+    (data) => {
+      if (data.start_date && data.end_date) {
+        return new Date(data.end_date) >= new Date(data.start_date);
+      }
+      return true;
+    },
+    {
+      message: "End date must be after or equal to start date",
+      path: ["end_date"],
+    }
+  );
 
 export type ProjectFormType = z.infer<typeof projectSchema>;

@@ -1,8 +1,9 @@
-from django.shortcuts import render
-from rest_framework import generics
-from django.contrib.auth.models import User
-from rest_framework.permissions import AllowAny,IsAuthenticated
+from rest_framework import generics, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
+
 from .serializers import (
     ChangePasswordSerializer,
     PasswordResetConfirmSerializer,
@@ -13,41 +14,72 @@ from .serializers import (
 )
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 User = get_user_model()
 
-# Custom serializer to accept email instead of username
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
-        # Allow both email and username fields
         if 'email' in self.initial_data and 'email' not in attrs:
             attrs['username'] = self.initial_data['email']
         return super().validate(attrs)
 
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+
 class RegisterView(generics.CreateAPIView):
-    """
-    API endpoint that allows anyone to register a new user.
-    """
     queryset = User.objects.all()
-    permission_classes = [AllowAny] # No token needed to register
+    permission_classes = [AllowAny]
     serializer_class = UserRegisterSerializer
+
 
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
+
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if not serializer.is_valid():
+            print("❌ VALIDATION ERRORS:", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+
+        # ✅ Handle optional password update
+        password = self.request.data.get('password', '').strip()
+        if password and len(password) >= 6:
+            instance.set_password(password)
+            instance.save(update_fields=['password'])
+
+        # ✅ Rebuild username from first + last name safely (no spaces issue)
+        first = instance.first_name or ''
+        last = instance.last_name or ''
+        full_name = f"{first}_{last}".strip('_') or instance.email.split('@')[0]
+        base = full_name
+        username = base
+        counter = 1
+        while User.objects.filter(username=username).exclude(pk=instance.pk).exists():
+            username = f"{base}_{counter}"
+            counter += 1
+        if instance.username != username:
+            instance.username = username
+            instance.save(update_fields=['username'])
+
+
 class CurrentUserView(generics.RetrieveUpdateAPIView):
-    """
-    API endpoint that allows users to retrieve and update their own profile.
-    GET - Returns current user data
-    PATCH/PUT - Updates current user data
-    """
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
@@ -56,9 +88,6 @@ class CurrentUserView(generics.RetrieveUpdateAPIView):
 
 
 class ChangePasswordView(APIView):
-    """
-    API endpoint that allows an authenticated user to change their password.
-    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):

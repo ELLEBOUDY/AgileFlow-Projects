@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
 class TeamSerializer(serializers.ModelSerializer):
     """
     Serializer to handle Team CRUD operations.
@@ -22,53 +23,76 @@ class TeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Team
-        fields = ['id', 'team_name', 'description', 'manager', 'members', 'manager_email', 'members_emails', 'created_at']
+        fields = [
+            'id', 'team_name', 'description', 'manager', 'members',
+            'manager_email', 'members_emails', 'created_at'
+        ]
 
 
-class ProjectSerializer(serializers.ModelSerializer): 
+class ProjectSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source='project_name')
-    team_name = serializers.CharField(source='team.team_name', read_only=True)
-    team_members = serializers.PrimaryKeyRelatedField(source='team.members', many=True, read_only=True)
-    
-    manager_name = serializers.CharField(source='team.manager.username', read_only=True)
-    manager_email = serializers.CharField(source='team.manager.email', read_only=True)
+    team_name = serializers.SerializerMethodField()
+    team_members = serializers.SerializerMethodField()
+    manager_name = serializers.SerializerMethodField()
+    manager_email = serializers.SerializerMethodField()
+
+    # ✅ Allow null so projects can exist without a team (and can be unassigned)
+    team = serializers.PrimaryKeyRelatedField(
+        queryset=Team.objects.all(),
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = Project
         fields = [
-            'id', 'title', 'description', 'start_date', 'end_date', 
-            'status', 'progress', 'team', 'team_name', 'team_members', 
-            'manager_name', 'manager_email', 'created_at' #
+            'id', 'title', 'description', 'start_date', 'end_date',
+            'status', 'progress', 'team', 'team_name', 'team_members',
+            'manager_name', 'manager_email', 'created_at'
         ]
+
+    def get_team_name(self, obj):
+        if obj.team:
+            return obj.team.team_name
+        return None
+
+    def get_team_members(self, obj):
+        if obj.team:
+            return list(obj.team.members.values_list('id', flat=True))
+        return []
+
+    def get_manager_name(self, obj):
+        if obj.team:
+            return obj.team.manager.username
+        return None
+
+    def get_manager_email(self, obj):
+        if obj.team:
+            return obj.team.manager.email
+        return None
 
     def is_valid(self, raise_exception=False):
         valid = super().is_valid(raise_exception=False)
         if not valid:
-            print("❌ ENGINE VALIDATION ERRORS:", self.errors) 
+            print("❌ ENGINE VALIDATION ERRORS:", self.errors)
         if raise_exception and not valid:
             raise serializers.ValidationError(self.errors)
         return valid
 
     def create(self, validated_data):
-        if 'team' not in validated_data or validated_data['team'] is None:
-            from .models import Team
-            validated_data['team'] = Team.objects.first()
+        # ✅ team can be null — no fallback needed
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        if 'team' not in validated_data or validated_data['team'] is None:
-            validated_data['team'] = instance.team
+        # ✅ Allows explicitly setting team to null (unassigning a project)
         return super().update(instance, validated_data)
 
 
-# 1. تحديث الـ TaskSerializer عشان نضمن شكل بيانات مريح للـ Dropdown والعرض
 class TaskSerializer(serializers.ModelSerializer):
     project_name = serializers.CharField(source='project.project_name', read_only=True)
     assigned_to_email = serializers.CharField(source='assigned_to.email', read_only=True)
-    assigned_to_username = serializers.CharField(source='assigned_to.username', read_only=True) # زادت للعرض
-    
-    # حقل وهمي عشان لو الـ Frontend بيدور على title بدل task_title في الـ Dropdown
-    title = serializers.CharField(source='task_title', read_only=True) 
+    assigned_to_username = serializers.CharField(source='assigned_to.username', read_only=True)
+    title = serializers.CharField(source='task_title', read_only=True)
 
     assigned_to = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(role='member'),
@@ -79,17 +103,16 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = [
-            'id', 'task_title', 'title', 'description', 'priority', 
-            'status', 'deadline', 'project', 'project_name', 
+            'id', 'task_title', 'title', 'description', 'priority',
+            'status', 'deadline', 'project', 'project_name',
             'assigned_to', 'assigned_to_email', 'assigned_to_username', 'created_at'
         ]
 
 
-# 2. تحديث الـ FileSerializer عشان يرجع اسم وإيميل الشخص اللي رفع الملف
 class FileSerializer(serializers.ModelSerializer):
     uploaded_by_email = serializers.CharField(source='uploaded_by.email', read_only=True)
-    uploaded_by_name = serializers.CharField(source='uploaded_by.username', read_only=True) # ✨ الحل هنا لاسم الرافع!
-    task_title = serializers.CharField(source='task.task_title', read_only=True) # عشان يظهر اسم التاسك جنب الملف لو حبيت
+    uploaded_by_name = serializers.CharField(source='uploaded_by.username', read_only=True)
+    task_title = serializers.CharField(source='task.task_title', read_only=True)
 
     class Meta:
         model = File
@@ -101,6 +124,7 @@ class FileSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     user_email = serializers.CharField(source='user.email', read_only=True)
+
     class Meta:
         model = Comment
         fields = ['id', 'content', 'task', 'user', 'user_email', 'created_at']

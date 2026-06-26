@@ -22,28 +22,22 @@ export function RegisterPage() {
   const onSubmit = async (data: RegisterFormType) => {
     try {
       setError(null);
-      console.log("Registering with:", data);
 
-      // Split full name into first_name and last_name
-      const nameParts = data.name.trim().split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts[1] || "";
+      const fullName = `${data.first_name.trim()} ${data.last_name.trim()}`;
 
-      // Call register API
       const response = await userAPI.register({
-        name: data.name,
-        username: data.name,
+        first_name: data.first_name.trim(),
+        last_name: data.last_name.trim(),
+        name: fullName,
+        username: fullName,
         email: data.email,
         password: data.password,
-        first_name: firstName,
-        last_name: lastName,
+        phone: data.phone,
+        role: "member",
       });
 
-      console.log("Registration successful:", response.data);
-
-      // Auto-login after registration
       const loginResponse = await userAPI.login({
-        email: data.email, // TokenObtainPairView expects email, not username
+        email: data.email,
         password: data.password,
       });
 
@@ -53,17 +47,17 @@ export function RegisterPage() {
       if (response.data.role) {
         localStorage.setItem("user_role", response.data.role);
       }
+
       navigate("/");
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Registration failed";
-      setError(errorMessage);
-
-      // Log backend error details
-      if (err instanceof Error && 'response' in err) {
-        const axiosError = err as any;
-        console.error("Backend error details:", axiosError.response?.data);
-      }
-      console.error("Registration error:", err);
+      const axiosError = err as any;
+      const backendMessage =
+        axiosError?.response?.data?.detail ||
+        axiosError?.response?.data?.email?.[0] ||
+        axiosError?.response?.data?.phone?.[0] ||
+        axiosError?.response?.data?.password?.[0] ||
+        "Registration failed. Please try again.";
+      setError(backendMessage);
     }
   };
 
@@ -85,21 +79,40 @@ export function RegisterPage() {
       )}
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <div className="space-y-2 text-left">
-          <label className="text-sm font-medium leading-none" htmlFor="name">
-            Full Name
-          </label>
-          <Input
-            id="name"
-            placeholder="John Doe"
-            {...register("name")}
-            aria-invalid={!!errors.name}
-          />
-          {errors.name && (
-            <p className="text-sm text-destructive">{errors.name.message}</p>
-          )}
+        {/* First Name & Last Name */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2 text-left">
+            <label className="text-sm font-medium leading-none" htmlFor="first_name">
+              First Name
+            </label>
+            <Input
+              id="first_name"
+              placeholder="John"
+              {...register("first_name")}
+              aria-invalid={!!errors.first_name}
+            />
+            {errors.first_name && (
+              <p className="text-sm text-destructive">{errors.first_name.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2 text-left">
+            <label className="text-sm font-medium leading-none" htmlFor="last_name">
+              Last Name
+            </label>
+            <Input
+              id="last_name"
+              placeholder="Doe"
+              {...register("last_name")}
+              aria-invalid={!!errors.last_name}
+            />
+            {errors.last_name && (
+              <p className="text-sm text-destructive">{errors.last_name.message}</p>
+            )}
+          </div>
         </div>
 
+        {/* Email */}
         <div className="space-y-2 text-left">
           <label className="text-sm font-medium leading-none" htmlFor="email">
             Email address
@@ -115,23 +128,37 @@ export function RegisterPage() {
           )}
         </div>
 
+        {/* Phone */}
         <div className="space-y-2 text-left">
-          <label
-            className="text-sm font-medium leading-none"
-            htmlFor="password"
-          >
+          <label className="text-sm font-medium leading-none" htmlFor="phone">
+            Phone Number
+          </label>
+          <Input
+            id="phone"
+            placeholder="01012345678"
+            maxLength={11}
+            {...register("phone")}
+            aria-invalid={!!errors.phone}
+          />
+          {errors.phone && (
+            <p className="text-sm text-destructive">{errors.phone.message}</p>
+          )}
+        </div>
+
+        {/* Password */}
+        <div className="space-y-2 text-left">
+          <label className="text-sm font-medium leading-none" htmlFor="password">
             Password
           </label>
           <Input
             id="password"
             type="password"
+            placeholder="Min. 6 characters"
             {...register("password")}
             aria-invalid={!!errors.password}
           />
           {errors.password && (
-            <p className="text-sm text-destructive">
-              {errors.password.message}
-            </p>
+            <p className="text-sm text-destructive">{errors.password.message}</p>
           )}
         </div>
 

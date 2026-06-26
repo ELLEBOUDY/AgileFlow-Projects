@@ -53,8 +53,8 @@ const ProjectFormModal = ({
       status: "planning",
       progress: 0,
       team: null,
-      start_date: "", // ➕ قيمة افتراضية
-      end_date: "", // ➕ قيمة افتراضية
+      start_date: "",
+      end_date: "",
     },
   });
 
@@ -72,8 +72,8 @@ const ProjectFormModal = ({
           status: editingProject.status,
           progress: editingProject.progress,
           team: teamId ? Number(teamId) : null,
-          start_date: editingProject.start_date || "", // ➕ تعبئة تاريخ البدء عند التعديل
-          end_date: editingProject.end_date || "", // ➕ تعبئة تاريخ الانتهاء عند التعديل
+          start_date: editingProject.start_date || "",
+          end_date: editingProject.end_date || "",
         });
       } else {
         reset({
@@ -95,10 +95,15 @@ const ProjectFormModal = ({
       onClose={onClose}
       title={editingProject ? "Edit Project" : "Create New Project"}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5 max-h-[70vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+      >
         {/* Project Title */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Project Title</label>
+          <label className="text-sm font-medium">
+            Project Title <span className="text-destructive">*</span>
+          </label>
           <input
             type="text"
             className={`flex h-10 w-full rounded-md border ${
@@ -123,7 +128,7 @@ const ProjectFormModal = ({
               setValueAs: (value) => (value === "" ? null : Number(value)),
             })}
           >
-            <option value="">-- Select a Team --</option>
+            <option value="">-- Select a Team (optional) --</option>
             {isLoadingTeams ? (
               <option disabled>Loading teams...</option>
             ) : (
@@ -139,30 +144,50 @@ const ProjectFormModal = ({
           )}
         </div>
 
-        {/* ➕ صف التواريخ الجديد بالكامل (Start Date & End Date) 📆 */}
+        {/* Start Date & End Date */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Start Date</label>
+            <label className="text-sm font-medium">
+              Start Date <span className="text-destructive">*</span>
+            </label>
             <input
               type="date"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className={`flex h-10 w-full rounded-md border ${
+                errors.start_date ? "border-destructive" : "border-input"
+              } bg-background px-3 py-2 text-sm`}
               {...register("start_date")}
             />
+            {errors.start_date && (
+              <p className="text-xs text-destructive">
+                {errors.start_date.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">End Date</label>
+            <label className="text-sm font-medium">
+              End Date <span className="text-destructive">*</span>
+            </label>
             <input
               type="date"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className={`flex h-10 w-full rounded-md border ${
+                errors.end_date ? "border-destructive" : "border-input"
+              } bg-background px-3 py-2 text-sm`}
               {...register("end_date")}
             />
+            {errors.end_date && (
+              <p className="text-xs text-destructive">
+                {errors.end_date.message}
+              </p>
+            )}
           </div>
         </div>
 
         {/* Description */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Description</label>
+          <label className="text-sm font-medium">
+            Description <span className="text-destructive">*</span>
+          </label>
           <textarea
             className={`flex min-h-[100px] w-full rounded-md border ${
               errors.description ? "border-destructive" : "border-input"
@@ -198,7 +223,6 @@ const ProjectFormModal = ({
               Progress ({watch("progress") || 0}%)
             </label>
             <input
-              type="number"
               min="0"
               max="100"
               className={`flex h-10 w-full rounded-md border ${

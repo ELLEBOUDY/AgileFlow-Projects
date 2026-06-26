@@ -1,17 +1,11 @@
 import { useMemo, useState } from "react";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
 import { Plus } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
-
 import api from "@/services/api";
 import { useUser } from "@/hooks/useUser";
-
 import type { IProject } from "@/interfaces";
 import type { ProjectFormType } from "@/validation";
-
 import ProjectCard from "@/components/projects/ProjectCard";
 import ProjectsFilters from "@/components/projects/ProjectsFilters";
 import ProjectFormModal from "@/components/projects/ProjectFormModal";
@@ -24,13 +18,11 @@ export function ProjectsPage() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [teamFilter, setTeamFilter] = useState("all");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [editingProject, setEditingProject] = useState<IProject | null>(null);
-
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
   const { data: projects = [], isLoading } = useQuery({
@@ -44,24 +36,14 @@ export function ProjectsPage() {
   const createProjectMutation = useMutation({
     mutationFn: async (project: ProjectFormType) => {
       if (editingProject) {
-        const { data } = await api.put(
-          `/projects/${editingProject.id}`,
-          project,
-        );
-
+        const { data } = await api.put(`/projects/${editingProject.id}`, project);
         return data;
       }
-
       const { data } = await api.post("/projects", project);
-
       return data;
     },
-
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["projects"],
-      });
-
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
       setIsModalOpen(false);
       setEditingProject(null);
     },
@@ -71,36 +53,36 @@ export function ProjectsPage() {
     mutationFn: async (projectId: string) => {
       await api.delete(`/projects/${projectId}`);
     },
-
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["projects"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project: IProject) => {
-      if (statusFilter !== "all" && project.status !== statusFilter) {
-        return false;
-      }
+      // Status filter
+      if (statusFilter !== "all" && project.status !== statusFilter) return false;
 
+      // Team assignment filter
+      if (teamFilter === "assigned" && !project.team) return false;
+      if (teamFilter === "unassigned" && project.team) return false;
+
+      // Search filter
       if (search.trim() !== "") {
         const text = search.toLowerCase();
-
         return (
           project.title.toLowerCase().includes(text) ||
-          project.description?.toLowerCase().includes(text)
+          project.description?.toLowerCase().includes(text) ||
+          project.team_name?.toLowerCase().includes(text)
         );
       }
 
       return true;
     });
-  }, [projects, search, statusFilter]);
+  }, [projects, search, statusFilter, teamFilter]);
 
   const handleSubmitProject = (data: ProjectFormType) => {
     if (!isAdmin) return;
-
     createProjectMutation.mutate(data);
   };
 
@@ -116,9 +98,7 @@ export function ProjectsPage() {
 
   const confirmDeleteProject = () => {
     if (!projectToDelete) return;
-
     deleteProjectMutation.mutate(projectToDelete);
-
     setProjectToDelete(null);
     setIsDeleteModalOpen(false);
   };
@@ -133,7 +113,6 @@ export function ProjectsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Projects</h2>
-
           <p className="text-muted-foreground mt-1">
             Manage and track all your ongoing projects.
           </p>
@@ -158,11 +137,17 @@ export function ProjectsPage() {
         setSearch={setSearch}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
+        teamFilter={teamFilter}
+        setTeamFilter={setTeamFilter}
       />
 
       {isLoading ? (
         <div className="text-center text-muted-foreground py-12 animate-pulse">
           Loading projects...
+        </div>
+      ) : filteredProjects.length === 0 ? (
+        <div className="text-center text-muted-foreground py-12">
+          No projects found.
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

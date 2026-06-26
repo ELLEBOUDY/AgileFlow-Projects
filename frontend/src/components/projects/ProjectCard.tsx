@@ -23,12 +23,26 @@ const ProjectCard = ({ project, onEdit, onDelete }: ProjectCardProps) => {
     >
       <div>
         <div className="flex justify-between items-start mb-4">
-          <Badge
-            variant={project.status === "in_progress" ? "default" : "secondary"}
-            className="capitalize"
-          >
-            {project.status.replace("_", " ")}
-          </Badge>
+          {/* Status + Team Assignment badges */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge
+              variant={project.status === "in_progress" ? "default" : "secondary"}
+              className="capitalize"
+            >
+              {project.status.replace("_", " ")}
+            </Badge>
+
+            <Badge
+              variant={project.team ? "outline" : "secondary"}
+              className={`capitalize text-xs ${
+                project.team
+                  ? "border-green-500 text-green-500"
+                  : "border-muted-foreground text-muted-foreground"
+              }`}
+            >
+              {project.team ? "Assigned" : "Unassigned"}
+            </Badge>
+          </div>
 
           <div onClick={(e) => e.stopPropagation()}>
             <ProjectActionsMenu
@@ -41,6 +55,13 @@ const ProjectCard = ({ project, onEdit, onDelete }: ProjectCardProps) => {
         <h3 className="font-semibold text-lg leading-tight mb-2">
           {project.title}
         </h3>
+
+        {/* Team name if assigned */}
+        {project.team_name && (
+          <p className="text-xs text-muted-foreground mb-1">
+            Team: <span className="font-medium text-foreground">{project.team_name}</span>
+          </p>
+        )}
 
         <p className="text-sm text-muted-foreground line-clamp-2 mb-6">
           {project.description || "No description provided for this project."}

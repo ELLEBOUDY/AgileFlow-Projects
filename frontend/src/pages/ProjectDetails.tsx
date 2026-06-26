@@ -6,10 +6,9 @@ import {
   Users,
   CheckSquare,
   Paperclip,
-  UserPlus,
-  Search,
   ChevronLeft,
   ChevronRight,
+  Link2,
 } from "lucide-react";
 import api from "@/services/api";
 import { useUser } from "@/hooks/useUser";
@@ -58,7 +57,6 @@ export default function ProjectDetailsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // States الخاصة بالتاسكات
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<any>(null);
@@ -69,8 +67,9 @@ export default function ProjectDetailsPage() {
     assigneeId: "",
   });
 
-  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-  const [memberSearch, setMemberSearch] = useState("");
+  // ✅ Replace member dialog with team assignment dialog
+  const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
   const [itemToDelete, setItemToDelete] = useState<{
     id: string;
@@ -114,6 +113,16 @@ export default function ProjectDetailsPage() {
     enabled: !!id,
   });
 
+  // ✅ Fetch all teams for the dropdown
+  const { data: allTeams = [] } = useQuery({
+    queryKey: ["teams"],
+    queryFn: async () => {
+      const { data } = await api.get("projects/teams/");
+      return data;
+    },
+    enabled: isTeamDialogOpen,
+  });
+
   const taskList: any[] = Array.isArray(tasksData)
     ? tasksData
     : tasksData?.results || [];
@@ -126,7 +135,6 @@ export default function ProjectDetailsPage() {
   const addTaskMutation = useMutation({
     mutationFn: async (formData: any) => {
       if (!isAdmin) return;
-
       const formattedData = {
         task_title: formData.title || formData.task_title,
         description: formData.description,
@@ -138,7 +146,6 @@ export default function ProjectDetailsPage() {
         project: project.id,
         assigned_to: formData.assigneeId || null,
       };
-
       const response = await api.post(`projects/tasks/`, formattedData);
       return response.data;
     },
@@ -151,7 +158,6 @@ export default function ProjectDetailsPage() {
   const editTaskMutation = useMutation({
     mutationFn: async ({ id: taskId, data }: { id: string; data: any }) => {
       if (!isAdmin) return;
-
       const formattedData = {
         task_title: data.title || data.task_title,
         description: data.description,
@@ -163,11 +169,7 @@ export default function ProjectDetailsPage() {
         project: project.id,
         assigned_to: data.assigneeId || null,
       };
-
-      const response = await api.put(
-        `projects/tasks/${taskId}/`,
-        formattedData,
-      );
+      const response = await api.put(`projects/tasks/${taskId}/`, formattedData);
       return response.data;
     },
     onSuccess: () => {
@@ -180,7 +182,6 @@ export default function ProjectDetailsPage() {
   const deleteTaskMutation = useMutation({
     mutationFn: async (taskId: string) => {
       if (!isAdmin) return;
-
       return await api.delete(`projects/tasks/${taskId}/`);
     },
     onSuccess: () => {
@@ -197,23 +198,24 @@ export default function ProjectDetailsPage() {
     },
   });
 
-  const addMemberMutation = useMutation({
-    mutationFn: async (userId: number) => {
-      const updatedMembers = [...(project.team_members || []), userId];
-      const teamId = project.team?.id || project.team;
-      return await api.patch(`projects/teams/${teamId}/`, {
-        members: updatedMembers,
+  // ✅ Assign or change team mutation
+  const assignTeamMutation = useMutation({
+    mutationFn: async (teamId: string | null) => {
+      const { data } = await api.patch(`projects/${id}/`, {
+        team: teamId ? Number(teamId) : null,
       });
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", id] });
-      setMemberSearch("");
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      setIsTeamDialogOpen(false);
+      setSelectedTeamId("");
     },
   });
 
   const handleEditClick = (task: any) => {
     if (!isAdmin) return;
-
     setEditingTask(task);
     setTaskForm({
       title: task.task_title || task.title,
@@ -222,6 +224,12 @@ export default function ProjectDetailsPage() {
       assigneeId: task.assigned_to ? String(task.assigned_to) : "",
     });
     setIsEditOpen(true);
+  };
+
+  const handleOpenTeamDialog = () => {
+    // Pre-select current team if exists
+    setSelectedTeamId(project?.team ? String(project.team) : "");
+    setIsTeamDialogOpen(true);
   };
 
   if (projectLoading || tasksLoading) {
@@ -281,16 +289,7 @@ export default function ProjectDetailsPage() {
     },
   ];
 
-  const availableUsersToAssign = users.filter((u: any) => {
-    const isAlreadyMember = project.team_members?.some(
-      (mId: any) => String(mId) === String(u.id),
-    );
-    const isManager = u.id === project.manager_id;
-    const matchesSearch =
-      u.username?.toLowerCase().includes(memberSearch.toLowerCase()) ||
-      u.email?.toLowerCase().includes(memberSearch.toLowerCase());
-    return !isAlreadyMember && !isManager && matchesSearch;
-  });
+  const hasTeam = !!project.team;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -304,7 +303,7 @@ export default function ProjectDetailsPage() {
         </Button>
       </div>
 
-      {/* تفاصيل المشروع العلوي */}
+      {/* Project Header */}
       <div className="border bg-card text-card-foreground rounded-xl p-6 shadow-sm flex flex-col md:flex-row justify-between gap-6">
         <div className="space-y-4 flex-1">
           <div className="flex items-center gap-3 flex-wrap">
@@ -314,21 +313,27 @@ export default function ProjectDetailsPage() {
             <Badge className="capitalize bg-primary/10 text-primary border border-primary/20 hover:bg-primary/10">
               {project.status?.replace("_", " ")}
             </Badge>
+            {/* ✅ Team assignment badge */}
+            <Badge
+              variant="outline"
+              className={
+                hasTeam
+                  ? "border-green-500 text-green-500"
+                  : "border-muted-foreground text-muted-foreground"
+              }
+            >
+              {hasTeam ? `Team: ${project.team_name}` : "No Team Assigned"}
+            </Badge>
           </div>
 
           <p className="text-muted-foreground text-sm max-w-3xl leading-relaxed">
-            {project.description ||
-              "No description available for this project."}
+            {project.description || "No description available for this project."}
           </p>
 
           <div className="space-y-1.5 pt-2 max-w-md">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">
-                Overall Project Progress
-              </span>
-              <span className="font-semibold text-primary">
-                {project.progress || 0}%
-              </span>
+              <span className="text-muted-foreground">Overall Project Progress</span>
+              <span className="font-semibold text-primary">{project.progress || 0}%</span>
             </div>
             <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
               <div
@@ -351,24 +356,20 @@ export default function ProjectDetailsPage() {
               <p className="text-sm font-semibold leading-none">
                 {project?.manager_name || "Manager"}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Project Manager
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Project Manager</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* العدادات الرقمية */}
+      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="border bg-card rounded-xl p-6 flex items-center gap-4 shadow-sm">
           <div className="p-3 rounded-lg bg-blue-500/10 text-blue-500">
             <CheckSquare className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-sm text-muted-foreground font-medium">
-              Total Tasks
-            </p>
+            <p className="text-sm text-muted-foreground font-medium">Total Tasks</p>
             <p className="text-2xl font-bold mt-0.5">{totalTasksCount}</p>
           </div>
         </div>
@@ -378,9 +379,7 @@ export default function ProjectDetailsPage() {
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-sm text-muted-foreground font-medium">
-              Team Scale
-            </p>
+            <p className="text-sm text-muted-foreground font-medium">Team Scale</p>
             <p className="text-2xl font-bold mt-0.5">
               {project.team_members?.length || 0} Members
             </p>
@@ -392,15 +391,13 @@ export default function ProjectDetailsPage() {
             <Paperclip className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-sm text-muted-foreground font-medium">
-              Attached Files
-            </p>
+            <p className="text-sm text-muted-foreground font-medium">Attached Files</p>
             <p className="text-2xl font-bold mt-0.5">{files.length}</p>
           </div>
         </div>
       </div>
 
-      {/* الشارتات */}
+      {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="border bg-card rounded-xl p-5 shadow-sm">
           <h3 className="text-sm font-semibold mb-4 text-card-foreground">
@@ -439,9 +436,7 @@ export default function ProjectDetailsPage() {
                     verticalAlign="bottom"
                     height={36}
                     formatter={(value) => (
-                      <span className="text-xs text-muted-foreground">
-                        {value}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{value}</span>
                     )}
                   />
                 </PieChart>
@@ -465,12 +460,7 @@ export default function ProjectDetailsPage() {
                   data={barData}
                   margin={{ top: 20, right: 10, left: -25, bottom: 0 }}
                 >
-                  <XAxis
-                    dataKey="name"
-                    stroke="#64748b"
-                    fontSize={11}
-                    tickLine={false}
-                  />
+                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
                   <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
                   <Tooltip
                     contentStyle={{
@@ -482,17 +472,11 @@ export default function ProjectDetailsPage() {
                   />
                   <Legend
                     formatter={(value) => (
-                      <span className="text-xs text-muted-foreground">
-                        {value}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{value}</span>
                     )}
                   />
                   <Bar dataKey="To Do" fill="#64748b" radius={[4, 4, 0, 0]} />
-                  <Bar
-                    dataKey="In Progress"
-                    fill="#3b82f6"
-                    radius={[4, 4, 0, 0]}
-                  />
+                  <Bar dataKey="In Progress" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="Review" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="Done" fill="#10b981" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -502,20 +486,23 @@ export default function ProjectDetailsPage() {
         </div>
       </div>
 
-      {/* الـ Hub الأساسي والتّبويبات */}
+      {/* Workspace Hub */}
       <div className="border bg-card rounded-xl shadow-sm overflow-hidden">
         <div className="p-6 pb-4 flex justify-between items-center">
           <h2 className="text-xl font-bold tracking-tight">Workspace Hub</h2>
           <div className="flex gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsAddMemberOpen(true)}
-              className="border-primary/30 text-primary hover:bg-primary/5 text-xs font-medium"
-            >
-              <UserPlus className="w-4 h-4 mr-1.5 shrink-0" />
-              Add Member
-            </Button>
+            {/* ✅ Assign Team / Change Team button — admin only */}
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenTeamDialog}
+                className="border-primary/30 text-primary hover:bg-primary/5 text-xs font-medium"
+              >
+                <Link2 className="w-4 h-4 mr-1.5 shrink-0" />
+                {hasTeam ? "Change Team" : "Assign Team"}
+              </Button>
+            )}
 
             {isAdmin && (
               <Button
@@ -537,11 +524,10 @@ export default function ProjectDetailsPage() {
           </div>
         </div>
 
-        {/* الـ Tabs الرئيسية */}
         <div className="px-6">
           <ProjectTabs
             project={project}
-            tasks={taskList} // 👈 نمرر الـ taskList الآمنة المفروزة 5 بـ 5
+            tasks={taskList}
             users={users}
             files={files}
             onEditTask={handleEditClick}
@@ -558,7 +544,7 @@ export default function ProjectDetailsPage() {
           />
         </div>
 
-        {/* 🛠️ إضافة شريط الأسهم والترقيم (نفس تصميم الداش بورد تماماً وبطريقة 5 بـ 5) */}
+        {/* Pagination */}
         <div className="p-4 flex items-center justify-between border-t gap-2 flex-wrap sm:flex-nowrap bg-muted/10">
           <p className="text-xs text-muted-foreground px-2">
             Showing {totalTasksCount ? indexOfFirstItem + 1 : 0} to{" "}
@@ -566,7 +552,6 @@ export default function ProjectDetailsPage() {
           </p>
 
           <div className="flex items-center gap-1.5 ml-auto">
-            {/* سهم لورا */}
             <Button
               variant="outline"
               size="icon"
@@ -577,7 +562,6 @@ export default function ProjectDetailsPage() {
               <ChevronLeft className="h-4 w-4" />
             </Button>
 
-            {/* أرقام الصفحات */}
             {Array.from({ length: totalPages }, (_, index) => {
               const pageNumber = index + 1;
               return (
@@ -592,14 +576,11 @@ export default function ProjectDetailsPage() {
               );
             })}
 
-            {/* سهم لقدام */}
             <Button
               variant="outline"
               size="icon"
               className="h-8 w-8"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
             >
               <ChevronRight className="h-4 w-4" />
@@ -608,54 +589,63 @@ export default function ProjectDetailsPage() {
         </div>
       </div>
 
-      {/* Add Member Dialog */}
-      <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-[#0b1329] text-slate-100 border-slate-800">
+      {/* ✅ Assign / Change Team Dialog */}
+      <Dialog open={isTeamDialogOpen} onOpenChange={setIsTeamDialogOpen}>
+        <DialogContent className="sm:max-w-[400px] bg-[#0b1329] text-slate-100 border-slate-800">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-primary" /> Assign Team Member
+              <Link2 className="w-5 h-5 text-primary" />
+              {hasTeam ? "Change Team" : "Assign Team"}
             </DialogTitle>
           </DialogHeader>
+
           <div className="space-y-4 py-3 text-sm">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search by name or email..."
-                className="w-full border border-slate-800 pl-9 pr-4 py-2.5 rounded-lg bg-slate-900/60 focus:outline-none focus:border-primary text-white text-xs"
-                value={memberSearch}
-                onChange={(e) => setMemberSearch(e.target.value)}
-              />
+            {hasTeam && (
+              <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700 text-xs text-slate-300">
+                Current team:{" "}
+                <span className="font-semibold text-primary">
+                  {project.team_name}
+                </span>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-xs text-muted-foreground font-medium">
+                Select a Team
+              </label>
+              <select
+                className="w-full border border-slate-800 px-3 py-2.5 rounded-lg bg-slate-900 text-slate-300 text-xs focus:outline-none focus:border-primary"
+                value={selectedTeamId}
+                onChange={(e) => setSelectedTeamId(e.target.value)}
+              >
+                <option value="">-- No Team (Unassign) --</option>
+                {allTeams.map((team: any) => (
+                  <option key={team.id} value={team.id}>
+                    {team.team_name}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="max-h-[220px] overflow-y-auto space-y-1 pr-1 border border-slate-800/40 rounded-lg p-1 bg-slate-950/20">
-              {availableUsersToAssign.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-6">
-                  No matching users available.
-                </p>
-              ) : (
-                availableUsersToAssign.map((u: any) => (
-                  <div
-                    key={u.id}
-                    className="flex items-center justify-between p-2 rounded-md hover:bg-slate-900 transition border border-transparent hover:border-slate-800"
-                  >
-                    <div>
-                      <p className="text-xs font-semibold">{u.username}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {u.email}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      className="h-7 px-3 bg-primary text-[11px]"
-                      onClick={() => addMemberMutation.mutate(u.id)}
-                      disabled={addMemberMutation.isPending}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                ))
-              )}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsTeamDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => assignTeamMutation.mutate(selectedTeamId || null)}
+                disabled={assignTeamMutation.isPending}
+              >
+                {assignTeamMutation.isPending
+                  ? "Saving..."
+                  : hasTeam
+                  ? "Change Team"
+                  : "Assign Team"}
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -673,30 +663,22 @@ export default function ProjectDetailsPage() {
               placeholder="Task Title"
               className="w-full border border-slate-800 p-2.5 rounded-lg bg-slate-900/60 focus:outline-none focus:border-primary text-white"
               value={taskForm.title}
-              onChange={(e) =>
-                setTaskForm({ ...taskForm, title: e.target.value })
-              }
+              onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
             />
             <textarea
               placeholder="Task Description"
               className="w-full border border-slate-800 p-2.5 rounded-lg bg-slate-900/60 h-24 resize-none focus:outline-none focus:border-primary text-white"
               value={taskForm.description}
-              onChange={(e) =>
-                setTaskForm({ ...taskForm, description: e.target.value })
-              }
+              onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
             />
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] text-muted-foreground mb-1 block">
-                  Status
-                </label>
+                <label className="text-[11px] text-muted-foreground mb-1 block">Status</label>
                 <select
                   className="w-full border border-slate-800 p-2.5 rounded-lg bg-slate-900 focus:outline-none focus:border-primary text-slate-300 text-xs"
                   value={taskForm.status}
-                  onChange={(e) =>
-                    setTaskForm({ ...taskForm, status: e.target.value })
-                  }
+                  onChange={(e) => setTaskForm({ ...taskForm, status: e.target.value })}
                 >
                   <option value="todo">To Do</option>
                   <option value="in_progress">In Progress</option>
@@ -707,15 +689,11 @@ export default function ProjectDetailsPage() {
 
               {canAssignTask && (
                 <div>
-                  <label className="text-[11px] text-muted-foreground mb-1 block">
-                    Assign To
-                  </label>
+                  <label className="text-[11px] text-muted-foreground mb-1 block">Assign To</label>
                   <select
                     className="w-full border border-slate-800 p-2.5 rounded-lg bg-slate-900 focus:outline-none focus:border-primary text-slate-300 text-xs"
                     value={taskForm.assigneeId}
-                    onChange={(e) =>
-                      setTaskForm({ ...taskForm, assigneeId: e.target.value })
-                    }
+                    onChange={(e) => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
                   >
                     <option value="">Unassigned</option>
                     {assignableMembers.map((member: any) => (
@@ -750,29 +728,21 @@ export default function ProjectDetailsPage() {
               type="text"
               className="w-full border border-slate-800 p-2.5 rounded-lg bg-slate-900/60 focus:outline-none focus:border-primary text-white"
               value={taskForm.title}
-              onChange={(e) =>
-                setTaskForm({ ...taskForm, title: e.target.value })
-              }
+              onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
             />
             <textarea
               className="w-full border border-slate-800 p-2.5 rounded-lg bg-slate-900/60 h-24 resize-none focus:outline-none focus:border-primary text-white"
               value={taskForm.description}
-              onChange={(e) =>
-                setTaskForm({ ...taskForm, description: e.target.value })
-              }
+              onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
             />
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] text-muted-foreground mb-1 block">
-                  Status
-                </label>
+                <label className="text-[11px] text-muted-foreground mb-1 block">Status</label>
                 <select
                   className="w-full border border-slate-800 p-2.5 rounded-lg bg-slate-900 focus:outline-none focus:border-primary text-slate-300 text-xs"
                   value={taskForm.status}
-                  onChange={(e) =>
-                    setTaskForm({ ...taskForm, status: e.target.value })
-                  }
+                  onChange={(e) => setTaskForm({ ...taskForm, status: e.target.value })}
                 >
                   <option value="todo">To Do</option>
                   <option value="in_progress">In Progress</option>
@@ -783,15 +753,11 @@ export default function ProjectDetailsPage() {
 
               {canAssignTask && (
                 <div>
-                  <label className="text-[11px] text-muted-foreground mb-1 block">
-                    Assign To
-                  </label>
+                  <label className="text-[11px] text-muted-foreground mb-1 block">Assign To</label>
                   <select
                     className="w-full border border-slate-800 p-2.5 rounded-lg bg-slate-900 focus:outline-none focus:border-primary text-slate-300 text-xs"
                     value={taskForm.assigneeId}
-                    onChange={(e) =>
-                      setTaskForm({ ...taskForm, assigneeId: e.target.value })
-                    }
+                    onChange={(e) => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
                   >
                     <option value="">Unassigned</option>
                     {assignableMembers.map((member: any) => (
@@ -806,12 +772,7 @@ export default function ProjectDetailsPage() {
 
             <Button
               className="w-full mt-2"
-              onClick={() =>
-                editTaskMutation.mutate({
-                  id: editingTask.id,
-                  data: taskForm,
-                })
-              }
+              onClick={() => editTaskMutation.mutate({ id: editingTask.id, data: taskForm })}
               disabled={editTaskMutation.isPending}
             >
               {editTaskMutation.isPending ? "Updating..." : "Submit Changes"}
@@ -820,7 +781,7 @@ export default function ProjectDetailsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation */}
       <AlertDialog
         open={itemToDelete !== null}
         onOpenChange={(open) => !open && setItemToDelete(null)}

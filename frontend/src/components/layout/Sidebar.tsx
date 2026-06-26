@@ -1,24 +1,22 @@
-import { NavLink } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard,
   Briefcase,
   CheckSquare,
-  Users,
-  FileText,
-  BarChart2,
-  Settings,
-  ShieldAlert,
   KanbanSquare,
-  X,
+  LayoutDashboard,
+  Settings,
+  Users,
+  X
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { NavLink } from "react-router-dom";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Projects", href: "/projects", icon: Briefcase },
+  { name: "Teams", href: "/teams", icon: Users },
   { name: "My Tasks", href: "/my-tasks", icon: CheckSquare },
   { name: "Task Board", href: "/task-board", icon: KanbanSquare },
-  { name: "Team", href: "/team", icon: Users },
+  { name: "Members", href: "/members", icon: Users },
   // { name: 'Files', href: '/files', icon: FileText },
   // { name: 'Reports', href: '/reports', icon: BarChart2 },
 ];

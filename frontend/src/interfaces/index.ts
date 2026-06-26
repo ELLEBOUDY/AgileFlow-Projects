@@ -1,8 +1,9 @@
 export interface IUser {
   id?: string | number;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  role: "Admin" | "Member" | "Manager";
+  role: "admin" | "member" | "manager";
   phone: string;
 }
 
@@ -17,6 +18,7 @@ export interface IProject {
   start_date?: string;
   end_date?: string;
 }
+
 export interface ITask {
   id: string;
   title: string;

@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 
+
 class Team(models.Model):
     """
     Model representing a distinct organization team led by a manager
@@ -8,14 +9,14 @@ class Team(models.Model):
     """
     team_name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
-    
+
     # One manager leads this team (1:M)
     manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.RESTRICT,
         related_name='led_teams'
     )
-    
+
     # A team contains multiple members (M:N)
     members = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -41,15 +42,16 @@ class Project(models.Model):
     description = models.TextField(blank=True, null=True)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
-    
-    
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
-    progress = models.IntegerField(default=0) 
 
-    # Project is assigned to one Team (1:M)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
+    progress = models.IntegerField(default=0)
+
+    # ✅ Team is now optional — null means project is unassigned
     team = models.ForeignKey(
         Team,
-        on_delete=models.RESTRICT,
+        on_delete=models.SET_NULL,  # changed from RESTRICT so deleting a team doesn't block
+        null=True,                   # ✅ allows unassigned projects
+        blank=True,                  # ✅ allows form/serializer to omit it
         related_name='team_projects'
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -80,16 +82,20 @@ class Task(models.Model):
     priority = models.CharField(max_length=15, choices=PRIORITY_CHOICES, default='medium')
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='todo')
     deadline = models.DateField(blank=True, null=True)
-    
+
     # Task belongs to a Project (1:M)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='project_tasks')
-    
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='project_tasks'
+    )
+
     # Task is assigned to a specific User (1:M)
     assigned_to = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        blank=True, 
-        null=True, 
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
         related_name='assigned_tasks'
     )
     created_at = models.DateTimeField(auto_now_add=True)
@@ -104,7 +110,11 @@ class Comment(models.Model):
     """
     content = models.TextField()
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='task_comments')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_comments')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='user_comments'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -116,8 +126,12 @@ class File(models.Model):
     Model managing documents uploaded under a specific task.
     """
     file_name = models.CharField(max_length=255)
-    file_path = models.FileField(upload_to='project_files/') # Django handles file paths beautifully via FileField
-    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='uploaded_files')
+    file_path = models.FileField(upload_to='project_files/')
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='uploaded_files'
+    )
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='task_files')
     upload_date = models.DateTimeField(auto_now_add=True)
 
@@ -129,7 +143,11 @@ class Notification(models.Model):
     """
     Model tracking notifications dispatched to specific users.
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='project_notifications')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='project_notifications'
+    )
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True)

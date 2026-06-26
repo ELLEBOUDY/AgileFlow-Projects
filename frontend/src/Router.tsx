@@ -1,20 +1,21 @@
 import { createBrowserRouter, redirect } from "react-router-dom";
-import MainLayout from "./components/layout/MainLayout";
 import AuthLayout from "./components/layout/AuthLayout";
+import MainLayout from "./components/layout/MainLayout";
 import { DashboardPage } from "./pages/DashboardPage";
-import { ProjectsPage } from "./pages/ProjectsPage";
-import ProjectDetailsPage from "./pages/ProjectDetails";
 import { MyTasksPage } from "./pages/MyTasksPage";
-import { TaskBoardPage } from "./pages/TaskBoardPage";
-import { TeamPage } from "./pages/TeamPage";
+import ProjectDetailsPage from "./pages/ProjectDetails";
+import { ProjectsPage } from "./pages/ProjectsPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { TaskBoardPage } from "./pages/TaskBoardPage";
+import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
-import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
-import { VerifyCodePage } from "./pages/auth/VerifyCodePage";
 import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
+import { VerifyCodePage } from "./pages/auth/VerifyCodePage";
 // import { FilesPage } from "./pages/FilesPage";
+import { MembersPage } from "./pages/MembersPage";
 import { ReportsPage } from "./pages/ReportsPage";
+import { TeamsPage } from "./pages/TeamsPage";
 
 /**
  * Authentication loader guard to secure private routes
@@ -98,8 +99,12 @@ export const router = createBrowserRouter([
         element: <TaskBoardPage />,
       },
       {
-        path: "team",
-        element: <TeamPage />,
+        path: "members",
+        element: <MembersPage />,
+      },
+      {
+        path: "teams",
+        element: <TeamsPage />,
       },
       // {
       //   path: "files",
